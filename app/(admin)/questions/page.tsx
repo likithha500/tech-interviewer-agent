@@ -1,258 +1,348 @@
 
-"use client";
+import { Suspense } from "react";
+import { connection } from "next/server";
+import { createClient } from "@/lib/supabase/server";
+import { addQuestion, toggleQuestionStatus } from "./actions";
 
-import { useEffect, useMemo, useState } from "react";
-import type { QuestionDetails } from "@/types";
-import { supabase } from "@/lib/supabase/client";
+interface Question {
+  id: string;
+  category: string;
+  topic: string;
+  difficulty: "Easy" | "Medium" | "Hard";
+  question: string;
+  marks: number;
+  is_active: boolean;
+}
 
-export default function QuestionsPage() {
-  const [questions, setQuestions] = useState<QuestionDetails[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+async function QuestionsList() {
+  await connection();
 
-  const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("All");
-  const [difficulty, setDifficulty] = useState("All");
-  const [selectedQuestion, setSelectedQuestion] =
-    useState<string | null>(null);
+  const supabase = await createClient();
 
-  useEffect(() => {
-    async function fetchQuestions() {
-      const { data, error } = await supabase
-        .from("questions")
-        .select(
-          "id, category, topic, difficulty, marks, question, expected_answer"
-        )
-        .eq("is_active", true)
-        .order("created_at", { ascending: false });
+  const { data, error } = await supabase
+    .from("questions")
+    .select("id, category, topic, difficulty, question, marks, is_active")
+    .order("created_at", { ascending: false });
 
-      if (error) {
-        setError(error.message);
-      } else {
-        setQuestions((data ?? []) as QuestionDetails[]);
-      }
+  const questions = (data ?? []) as Question[];
 
-      setLoading(false);
-    }
+  const activeCount = questions.filter((q) => q.is_active).length;
+  const inactiveCount = questions.length - activeCount;
 
-    fetchQuestions();
-  }, []);
-
-  const categories = useMemo(
-    () => ["All", ...new Set(questions.map((q) => q.category))],
-    [questions]
-  );
-
-  const filteredQuestions = useMemo(() => {
-    return questions.filter((q) => {
-      const matchesCategory =
-        category === "All" || q.category === category;
-
-      const matchesDifficulty =
-        difficulty === "All" || q.difficulty === difficulty;
-
-      const searchText = search.toLowerCase();
-
-      const matchesSearch =
-        q.topic.toLowerCase().includes(searchText) ||
-        q.question.toLowerCase().includes(searchText) ||
-        q.category.toLowerCase().includes(searchText);
-
-      return matchesCategory && matchesDifficulty && matchesSearch;
-    });
-  }, [questions, category, difficulty, search]);
+  const difficultyCount = {
+    Easy: questions.filter((q) => q.difficulty === "Easy").length,
+    Medium: questions.filter((q) => q.difficulty === "Medium").length,
+    Hard: questions.filter((q) => q.difficulty === "Hard").length,
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <h1 className="mb-2 text-2xl font-semibold text-primary">
-        Question Bank
-      </h1>
-
-      <p className="mb-6 text-sm text-gray-600">
-        Manage and explore your interview questions.
-      </p>
-
-      {loading && <p>Loading questions...</p>}
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-semibold text-gray-900">
+          Question Bank
+        </h1>
+        <p className="mt-1 text-sm text-gray-500">
+          Manage technical questions used in candidate interviews.
+        </p>
+      </div>
 
       {error && (
-        <p className="text-red-600">
-          Failed to load questions: {error}
-        </p>
+        <div className="rounded-lg bg-red-50 p-4 text-sm text-red-700">
+          Failed to load questions: {error.message}
+        </div>
       )}
 
-      {!loading && !error && (
-        <>
-          <div className="mb-5 grid grid-cols-1 gap-4 rounded-lg border bg-white p-4 md:grid-cols-3">
-            <div>
-              <label className="mb-1 block text-sm font-medium">
-                Search questions
-              </label>
-              <input
-                type="text"
-                placeholder="Search by topic or question..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full rounded-md border px-3 py-2 text-sm outline-none focus:border-blue-500"
-              />
-            </div>
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <StatCard label="Total Questions" value={questions.length} />
+        <StatCard label="Active Questions" value={activeCount} />
+        <StatCard label="Inactive Questions" value={inactiveCount} />
+        <StatCard label="Hard Questions" value={difficultyCount.Hard} />
+      </div>
+
+      <div className="grid grid-cols-3 gap-3">
+        <DifficultyCard label="Easy" value={difficultyCount.Easy} />
+        <DifficultyCard label="Medium" value={difficultyCount.Medium} />
+        <DifficultyCard label="Hard" value={difficultyCount.Hard} />
+      </div>
+
+      <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <h2 className="text-lg font-semibold text-gray-900">
+          Add a Question
+        </h2>
+
+        <form action={addQuestion} className="mt-5 space-y-4">
+          <div className="grid gap-4 sm:grid-cols-3">
+            <FormField label="Category" name="category" placeholder="e.g. DSA" required />
+            <FormField label="Topic" name="topic" placeholder="e.g. Arrays" required />
 
             <div>
-              <label className="mb-1 block text-sm font-medium">
-                Category
-              </label>
-              <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="w-full rounded-md border bg-white px-3 py-2 text-sm"
-              >
-                {categories.map((item) => (
-                  <option key={item} value={item}>
-                    {item}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="mb-1 block text-sm font-medium">
+              <label htmlFor="difficulty" className="mb-2 block text-sm font-medium text-gray-700">
                 Difficulty
               </label>
               <select
-                value={difficulty}
-                onChange={(e) => setDifficulty(e.target.value)}
-                className="w-full rounded-md border bg-white px-3 py-2 text-sm"
+                id="difficulty"
+                name="difficulty"
+                required
+                defaultValue="Medium"
+                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-500"
               >
-                {["All", "Easy", "Medium", "Hard"].map((item) => (
-                  <option key={item} value={item}>
-                    {item}
-                  </option>
-                ))}
+                <option value="Easy">Easy</option>
+                <option value="Medium">Medium</option>
+                <option value="Hard">Hard</option>
               </select>
             </div>
           </div>
 
-          <div className="mb-4 flex items-center justify-between">
-            <p className="text-sm text-gray-600">
-              Showing <strong>{filteredQuestions.length}</strong> of{" "}
-              <strong>{questions.length}</strong> questions
-            </p>
-
-            <button
-              onClick={() => {
-                setSearch("");
-                setCategory("All");
-                setDifficulty("All");
-                setSelectedQuestion(null);
-              }}
-              className="text-sm font-medium text-blue-700 hover:underline"
-            >
-              Clear filters
-            </button>
+          <div>
+            <label htmlFor="question" className="mb-2 block text-sm font-medium text-gray-700">
+              Question
+            </label>
+            <textarea
+              id="question"
+              name="question"
+              rows={3}
+              required
+              placeholder="Enter the interview question..."
+              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm outline-none focus:border-blue-500"
+            />
           </div>
 
-          <div className="overflow-x-auto rounded-lg border bg-white">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-surface">
+          <div>
+            <label htmlFor="expectedAnswer" className="mb-2 block text-sm font-medium text-gray-700">
+              Expected Answer / Evaluation Reference
+            </label>
+            <textarea
+              id="expectedAnswer"
+              name="expectedAnswer"
+              rows={3}
+              required
+              placeholder="Describe the expected answer..."
+              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm outline-none focus:border-blue-500"
+            />
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-3">
+            <FormField
+              label="Time Complexity"
+              name="timeComplexity"
+              placeholder="e.g. O(n)"
+            />
+            <FormField
+              label="Space Complexity"
+              name="spaceComplexity"
+              placeholder="e.g. O(1)"
+            />
+            <div>
+              <label htmlFor="marks" className="mb-2 block text-sm font-medium text-gray-700">
+                Marks
+              </label>
+              <input
+                id="marks"
+                name="marks"
+                type="number"
+                min="1"
+                max="100"
+                defaultValue="10"
+                required
+                className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm outline-none focus:border-blue-500"
+              />
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700"
+          >
+            Add Question
+          </button>
+        </form>
+      </section>
+
+      <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        <div className="border-b border-gray-200 px-6 py-4">
+          <h2 className="text-lg font-semibold text-gray-900">
+            All Questions
+          </h2>
+          <p className="mt-1 text-xs text-gray-500">
+            Questions retrieved directly from Supabase.
+          </p>
+        </div>
+
+        {questions.length === 0 ? (
+          <div className="px-6 py-12 text-center text-sm text-gray-500">
+            No questions found.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-gray-50 text-xs uppercase text-gray-500">
                 <tr>
-                  {["Category", "Topic", "Difficulty", "Marks", "Details"].map(
-                    (heading) => (
-                      <th
-                        key={heading}
-                        className="px-4 py-3 text-left text-sm font-medium text-gray-700"
-                      >
-                        {heading}
-                      </th>
-                    )
-                  )}
+                  <th className="px-6 py-3 font-medium">Question</th>
+                  <th className="px-6 py-3 font-medium">Category</th>
+                  <th className="px-6 py-3 font-medium">Topic</th>
+                  <th className="px-6 py-3 font-medium">Difficulty</th>
+                  <th className="px-6 py-3 font-medium">Marks</th>
+                  <th className="px-6 py-3 font-medium">Status</th>
+                  <th className="px-6 py-3 font-medium">Action</th>
                 </tr>
               </thead>
 
               <tbody className="divide-y divide-gray-100">
-                {filteredQuestions.map((q) => (
-                  <tr key={q.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 text-sm">{q.category}</td>
-                    <td className="px-4 py-3 text-sm">{q.topic}</td>
-                    <td className="px-4 py-3 text-sm">
-                      <span
-                        className={`rounded-full px-2 py-1 text-xs font-medium ${q.difficulty === "Easy"
-                            ? "bg-green-100 text-green-700"
-                            : q.difficulty === "Medium"
-                              ? "bg-yellow-100 text-yellow-700"
-                              : "bg-red-100 text-red-700"
-                          }`}
-                      >
-                        {q.difficulty}
+                {questions.map((question) => (
+                  <tr key={question.id} className="align-top hover:bg-gray-50">
+                    <td className="max-w-md px-6 py-4 font-medium text-gray-900">
+                      <p className="line-clamp-3">{question.question}</p>
+                    </td>
+                    <td className="px-6 py-4 text-gray-600">{question.category}</td>
+                    <td className="px-6 py-4 text-gray-600">{question.topic}</td>
+                    <td className="px-6 py-4">
+                      <DifficultyBadge difficulty={question.difficulty} />
+                    </td>
+                    <td className="px-6 py-4 text-gray-600">{question.marks}</td>
+                    <td className="px-6 py-4">
+                      <span className={`rounded-full px-3 py-1 text-xs font-medium ${question.is_active
+                          ? "bg-green-100 text-green-700"
+                          : "bg-gray-100 text-gray-600"
+                        }`}>
+                        {question.is_active ? "Active" : "Inactive"}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-sm">{q.marks}</td>
-                    <td className="px-4 py-3 text-sm">
-                      <button
-                        onClick={() =>
-                          setSelectedQuestion(
-                            selectedQuestion === q.id ? null : q.id
-                          )
-                        }
-                        className="font-medium text-blue-700 hover:underline"
-                      >
-                        {selectedQuestion === q.id ? "Close" : "View"}
-                      </button>
+                    <td className="px-6 py-4">
+                      <form action={toggleQuestionStatus.bind(
+                        null,
+                        question.id,
+                        !question.is_active
+                      )}>
+                        <button
+                          type="submit"
+                          className={`whitespace-nowrap rounded-lg px-3 py-2 text-xs font-medium ${question.is_active
+                              ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                              : "bg-green-600 text-white hover:bg-green-700"
+                            }`}
+                        >
+                          {question.is_active ? "Deactivate" : "Activate"}
+                        </button>
+                      </form>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-
-            {filteredQuestions.length === 0 && (
-              <p className="p-6 text-center text-sm text-gray-500">
-                No questions match your filters.
-              </p>
-            )}
           </div>
-
-          {selectedQuestion && (
-            <div className="mt-5 rounded-lg border bg-white p-5">
-              {(() => {
-                const q = questions.find(
-                  (item) => item.id === selectedQuestion
-                );
-
-                if (!q) return null;
-
-                return (
-                  <>
-                    <div className="mb-3 flex items-center justify-between">
-                      <h2 className="text-lg font-semibold">
-                        {q.topic} — {q.difficulty}
-                      </h2>
-                      <button
-                        onClick={() => setSelectedQuestion(null)}
-                        className="text-sm text-gray-500 hover:text-black"
-                      >
-                        Close
-                      </button>
-                    </div>
-
-                    <p className="mb-2 text-sm font-medium">
-                      Interview Question
-                    </p>
-                    <p className="mb-5 whitespace-pre-wrap text-sm text-gray-700">
-                      {q.question}
-                    </p>
-
-                    <p className="mb-2 text-sm font-medium">
-                      Expected Answer
-                    </p>
-                    <p className="whitespace-pre-wrap text-sm text-gray-700">
-                      {q.expected_answer || "No expected answer provided."}
-                    </p>
-                  </>
-                );
-              })()}
-            </div>
-          )}
-        </>
-      )}
+        )}
+      </section>
     </div>
   );
 }
 
+function FormField({
+  label,
+  name,
+  placeholder,
+  required = false,
+}: {
+  label: string;
+  name: string;
+  placeholder: string;
+  required?: boolean;
+}) {
+  return (
+    <div>
+      <label htmlFor={name} className="mb-2 block text-sm font-medium text-gray-700">
+        {label}
+      </label>
+      <input
+        id={name}
+        name={name}
+        required={required}
+        placeholder={placeholder}
+        className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm outline-none focus:border-blue-500"
+      />
+    </div>
+  );
+}
+
+function StatCard({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+      <p className="text-sm text-gray-500">{label}</p>
+      <p className="mt-2 text-2xl font-semibold text-gray-900">{value}</p>
+    </div>
+  );
+}
+
+function DifficultyCard({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-lg border border-gray-200 bg-white p-4">
+      <p className="text-sm text-gray-500">{label}</p>
+      <p className="mt-1 text-xl font-semibold text-gray-900">{value}</p>
+    </div>
+  );
+}
+
+function DifficultyBadge({ difficulty }: { difficulty: string }) {
+  const styles: Record<string, string> = {
+    Easy: "bg-green-100 text-green-700",
+    Medium: "bg-amber-100 text-amber-700",
+    Hard: "bg-red-100 text-red-700",
+  };
+
+  return (
+    <span className={`rounded-full px-3 py-1 text-xs font-medium ${styles[difficulty] ?? "bg-gray-100 text-gray-700"
+      }`}>
+      {difficulty}
+    </span>
+  );
+}
+
+async function QuestionMessages({
+  searchParams,
+}: {
+  searchParams: Promise<{ success?: string; error?: string }>;
+}) {
+  const params = await searchParams;
+
+  if (params.success === "added") {
+    return (
+      <p className="rounded-lg bg-green-50 p-3 text-sm text-green-700">
+        Question added successfully.
+      </p>
+    );
+  }
+
+  if (params.success === "updated") {
+    return (
+      <p className="rounded-lg bg-green-50 p-3 text-sm text-green-700">
+        Question status updated successfully.
+      </p>
+    );
+  }
+
+  if (params.error) {
+    return (
+      <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700">
+        {params.error}
+      </p>
+    );
+  }
+
+  return null;
+}
+
+export default function QuestionsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ success?: string; error?: string }>;
+}) {
+  return (
+    <div className="space-y-4">
+      <Suspense fallback={<p className="text-sm text-gray-500">Loading messages...</p>}>
+        <QuestionMessages searchParams={searchParams} />
+      </Suspense>
+
+      <Suspense fallback={<p className="text-sm text-gray-500">Loading question bank...</p>}>
+        <QuestionsList />
+      </Suspense>
+    </div>
+  );
+}
