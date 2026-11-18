@@ -23,6 +23,17 @@ interface DSAQuestion {
     marks: number;
 }
 
+interface DSAProgress {
+    total: number;
+    answered: number;
+    easy_total: number;
+    easy_answered: number;
+    medium_total: number;
+    medium_answered: number;
+    hard_total: number;
+    hard_answered: number;
+}
+
 async function InterviewContent({
     params,
 }: {
@@ -57,6 +68,23 @@ async function InterviewContent({
         return <WelcomeScreen interview={interview} />;
     }
 
+    const { data: progressData, error: progressError } =
+        await supabase.rpc(
+            "get_candidate_dsa_progress",
+            { p_token_hash: tokenHash }
+        );
+
+    if (progressError || !progressData) {
+        return (
+            <MessageScreen
+                title="Unable to load interview progress"
+                message="Please refresh the page or contact your interviewer."
+            />
+        );
+    }
+
+    const progress = progressData as unknown as DSAProgress;
+
     const { data: questionData, error: questionError } =
         await supabase.rpc(
             "get_candidate_dsa_question",
@@ -74,10 +102,7 @@ async function InterviewContent({
 
     if (!questionData) {
         return (
-            <MessageScreen
-                title="DSA Round Completed"
-                message="You have answered all currently available DSA questions. Please wait for your interviewer."
-            />
+            <DSACompletedScreen progress={progress} />
         );
     }
 
@@ -87,6 +112,7 @@ async function InterviewContent({
         <DSAQuestionScreen
             question={question}
             token={token}
+            progress={progress}
         />
     );
 }
@@ -168,10 +194,16 @@ function WelcomeScreen({
 function DSAQuestionScreen({
     question,
     token,
+    progress,
 }: {
     question: DSAQuestion;
     token: string;
+    progress: DSAProgress;
 }) {
+    const percentage = progress.total > 0
+        ? Math.round((progress.answered / progress.total) * 100)
+        : 0;
+
     return (
         <main className="min-h-screen bg-gray-50 px-4 py-8">
             <div className="mx-auto max-w-4xl space-y-6">
@@ -187,6 +219,60 @@ function DSAQuestionScreen({
 
                     <StatusBadge status="In Progress" />
                 </header>
+
+                <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                            <h2 className="text-lg font-semibold text-gray-900">
+                                DSA Round Progress
+                            </h2>
+                            <p className="mt-1 text-sm text-gray-500">
+                                {progress.answered} of {progress.total} questions completed
+                            </p>
+                        </div>
+
+                        <span className="text-lg font-bold text-blue-600">
+                            {percentage}%
+                        </span>
+                    </div>
+
+                    <div
+                        className="mt-4 h-3 overflow-hidden rounded-full bg-gray-100"
+                        role="progressbar"
+                        aria-valuenow={percentage}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-label="Overall DSA progress"
+                    >
+                        <div
+                            className="h-full rounded-full bg-blue-600 transition-all duration-300"
+                            style={{ width: `${percentage}%` }}
+                        />
+                    </div>
+
+                    <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+                        <DifficultyProgress
+                            label="Easy"
+                            answered={progress.easy_answered}
+                            total={progress.easy_total}
+                            color="bg-green-500"
+                        />
+
+                        <DifficultyProgress
+                            label="Medium"
+                            answered={progress.medium_answered}
+                            total={progress.medium_total}
+                            color="bg-amber-500"
+                        />
+
+                        <DifficultyProgress
+                            label="Hard"
+                            answered={progress.hard_answered}
+                            total={progress.hard_total}
+                            color="bg-red-500"
+                        />
+                    </div>
+                </section>
 
                 <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
                     <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 pb-5">
@@ -238,6 +324,79 @@ function DSAQuestionScreen({
     );
 }
 
+function DifficultyProgress({
+    label,
+    answered,
+    total,
+    color,
+}: {
+    label: string;
+    answered: number;
+    total: number;
+    color: string;
+}) {
+    const percentage = total > 0
+        ? Math.round((answered / total) * 100)
+        : 0;
+
+    return (
+        <div className="rounded-lg border border-gray-100 p-4">
+            <div className="flex items-center justify-between gap-2">
+                <span className="text-sm font-semibold text-gray-700">
+                    {label}
+                </span>
+                <span className="text-xs font-medium text-gray-500">
+                    {answered}/{total}
+                </span>
+            </div>
+
+            <div className="mt-3 h-2 overflow-hidden rounded-full bg-gray-100">
+                <div
+                    className={`h-full rounded-full ${color} transition-all duration-300`}
+                    style={{ width: `${percentage}%` }}
+                />
+            </div>
+        </div>
+    );
+}
+
+function DSACompletedScreen({
+    progress,
+}: {
+    progress: DSAProgress;
+}) {
+    return (
+        <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-10">
+            <section className="w-full max-w-xl rounded-2xl border border-gray-200 bg-white p-8 text-center shadow-sm">
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100 text-3xl text-green-700">
+                    ✓
+                </div>
+
+                <h1 className="mt-5 text-2xl font-bold text-gray-900">
+                    DSA Round Completed
+                </h1>
+
+                <p className="mt-2 text-gray-500">
+                    You have answered all currently available DSA questions.
+                </p>
+
+                <div className="mt-6 rounded-xl bg-gray-50 p-5">
+                    <p className="text-sm text-gray-500">
+                        Questions completed
+                    </p>
+                    <p className="mt-1 text-3xl font-bold text-gray-900">
+                        {progress.answered}/{progress.total}
+                    </p>
+                </div>
+
+                <p className="mt-6 text-sm text-gray-600">
+                    Please wait for your interviewer for the next round.
+                </p>
+            </section>
+        </main>
+    );
+}
+
 function StatusBadge({ status }: { status: string }) {
     return (
         <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
@@ -254,8 +413,7 @@ function DifficultyBadge({ difficulty }: { difficulty: string }) {
     };
 
     return (
-        <span className={`rounded-full px-3 py-1 text-xs font-semibold ${styles[difficulty] ?? "bg-gray-100 text-gray-700"
-            }`}>
+        <span className={`rounded-full px-3 py-1 text-xs font-semibold ${styles[difficulty] ?? "bg-gray-100 text-gray-700"}`}>
             {difficulty}
         </span>
     );
@@ -308,3 +466,4 @@ export default function CandidateInterviewPage({
         </Suspense>
     );
 }
+
