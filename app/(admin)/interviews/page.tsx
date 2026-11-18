@@ -2,7 +2,11 @@
 import { Suspense } from "react";
 import { connection } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { scheduleInterview } from "./actions";
+import {
+  scheduleInterview,
+  startInterview,
+  completeInterview,
+} from "./actions";
 
 interface Candidate {
   id: string;
@@ -74,7 +78,7 @@ async function InterviewsList() {
           Interview Management
         </h1>
         <p className="mt-1 text-sm text-gray-500">
-          Schedule and manage candidate interviews.
+          Schedule, start and manage candidate interviews.
         </p>
       </div>
 
@@ -102,11 +106,14 @@ async function InterviewsList() {
         </h2>
 
         <p className="mt-1 text-sm text-gray-500">
-          Select a candidate and set the interview date and time.
-          Times are interpreted as Indian Standard Time.
+          Choose a candidate and set the interview date and time.
+          Times use Indian Standard Time.
         </p>
 
-        <form action={scheduleInterview} className="mt-5 grid gap-4 sm:grid-cols-3">
+        <form
+          action={scheduleInterview}
+          className="mt-5 grid gap-4 sm:grid-cols-3"
+        >
           <div>
             <label
               htmlFor="candidateId"
@@ -120,7 +127,7 @@ async function InterviewsList() {
               name="candidateId"
               required
               defaultValue=""
-              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-500"
             >
               <option value="" disabled>
                 Select candidate
@@ -132,12 +139,6 @@ async function InterviewsList() {
                 </option>
               ))}
             </select>
-
-            {candidateList.length === 0 && (
-              <p className="mt-1 text-xs text-amber-600">
-                Add a candidate before scheduling an interview.
-              </p>
-            )}
           </div>
 
           <div>
@@ -153,7 +154,7 @@ async function InterviewsList() {
               name="scheduledAt"
               type="datetime-local"
               required
-              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm outline-none focus:border-blue-500"
             />
           </div>
 
@@ -161,12 +162,18 @@ async function InterviewsList() {
             <button
               type="submit"
               disabled={candidateList.length === 0}
-              className="w-full rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Schedule Interview
             </button>
           </div>
         </form>
+
+        {candidateList.length === 0 && (
+          <p className="mt-2 text-xs text-amber-600">
+            Add a candidate before scheduling an interview.
+          </p>
+        )}
       </section>
 
       <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
@@ -182,7 +189,7 @@ async function InterviewsList() {
               No interviews scheduled yet.
             </p>
             <p className="mt-1 text-sm text-gray-500">
-              Use the form above to schedule your first interview.
+              Schedule your first interview using the form above.
             </p>
           </div>
         ) : (
@@ -194,6 +201,7 @@ async function InterviewsList() {
                   <th className="px-6 py-3 font-medium">Email</th>
                   <th className="px-6 py-3 font-medium">Scheduled At</th>
                   <th className="px-6 py-3 font-medium">Status</th>
+                  <th className="px-6 py-3 font-medium">Action</th>
                 </tr>
               </thead>
 
@@ -222,14 +230,37 @@ async function InterviewsList() {
                     </td>
 
                     <td className="px-6 py-4">
-                      <span className={`rounded-full px-3 py-1 text-xs font-medium ${interview.status === "Completed"
-                          ? "bg-green-100 text-green-700"
-                          : interview.status === "In Progress"
-                            ? "bg-blue-100 text-blue-700"
-                            : "bg-amber-100 text-amber-700"
-                        }`}>
-                        {interview.status}
-                      </span>
+                      <StatusBadge status={interview.status} />
+                    </td>
+
+                    <td className="px-6 py-4">
+                      {interview.status === "Scheduled" && (
+                        <form action={startInterview.bind(null, interview.id)}>
+                          <button
+                            type="submit"
+                            className="rounded-lg bg-blue-600 px-3 py-2 text-xs font-medium text-white hover:bg-blue-700"
+                          >
+                            Start Interview
+                          </button>
+                        </form>
+                      )}
+
+                      {interview.status === "In Progress" && (
+                        <form action={completeInterview.bind(null, interview.id)}>
+                          <button
+                            type="submit"
+                            className="rounded-lg bg-green-600 px-3 py-2 text-xs font-medium text-white hover:bg-green-700"
+                          >
+                            Complete Interview
+                          </button>
+                        </form>
+                      )}
+
+                      {interview.status === "Completed" && (
+                        <span className="text-xs text-gray-400">
+                          No pending action
+                        </span>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -251,6 +282,21 @@ function StatCard({ label, value }: { label: string; value: number }) {
   );
 }
 
+function StatusBadge({ status }: { status: string }) {
+  const styles: Record<string, string> = {
+    Scheduled: "bg-amber-100 text-amber-700",
+    "In Progress": "bg-blue-100 text-blue-700",
+    Completed: "bg-green-100 text-green-700",
+  };
+
+  return (
+    <span className={`rounded-full px-3 py-1 text-xs font-medium ${styles[status] ?? "bg-gray-100 text-gray-700"
+      }`}>
+      {status}
+    </span>
+  );
+}
+
 async function InterviewMessages({
   searchParams,
 }: {
@@ -258,10 +304,16 @@ async function InterviewMessages({
 }) {
   const params = await searchParams;
 
-  if (params.success === "scheduled") {
+  const messages: Record<string, string> = {
+    scheduled: "Interview scheduled successfully.",
+    started: "Interview started successfully.",
+    completed: "Interview marked as completed.",
+  };
+
+  if (params.success && messages[params.success]) {
     return (
       <p className="rounded-lg bg-green-50 p-3 text-sm text-green-700">
-        Interview scheduled successfully.
+        {messages[params.success]}
       </p>
     );
   }
