@@ -17,6 +17,7 @@ export default function Sidebar() {
           <li key={item.href}>
             <Link
               href={item.href}
+              prefetch={false}
               className="flex items-center gap-2 p-2 rounded hover:bg-primary/10 text-gray-800"
             >
               <item.icon className="w-5 h-5" />

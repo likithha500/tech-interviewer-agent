@@ -2,13 +2,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Question } from "@/types";
+import type { QuestionDetails } from "@/types";
 import { supabase } from "@/lib/supabase/client";
-
-interface QuestionDetails extends Question {
-  question: string;
-  expected_answer: string | null;
-}
 
 export default function QuestionsPage() {
   const [questions, setQuestions] = useState<QuestionDetails[]>([]);

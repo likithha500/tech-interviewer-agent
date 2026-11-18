@@ -21,6 +21,30 @@ export interface Question {
   topic: string;
   difficulty: 'Easy' | 'Medium' | 'Hard';
   marks: number;
+  question?: string;
+  expected_answer?: string | null;
+  time_complexity?: string | null;
+  space_complexity?: string | null;
+  evaluation_criteria?: Record<string, unknown> | null;
+  test_cases?: unknown[] | null;
+  is_active?: boolean;
+  created_at?: string;
+}
+
+export interface QuestionDetails {
+  id: string;
+  category: string;
+  topic: string;
+  difficulty: 'Easy' | 'Medium' | 'Hard';
+  question: string;
+  expected_answer: string | null;
+  time_complexity?: string | null;
+  space_complexity?: string | null;
+  evaluation_criteria?: Record<string, unknown> | null;
+  test_cases?: unknown[] | null;
+  marks: number;
+  is_active?: boolean;
+  created_at?: string;
 }
 
 export interface Report {
