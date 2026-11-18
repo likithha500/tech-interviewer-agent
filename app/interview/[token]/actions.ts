@@ -4,13 +4,25 @@
 import { createHash } from "node:crypto";
 import { createClient } from "@/lib/supabase/server";
 
-export async function submitDSAAnswer(
+const ALLOWED_CATEGORIES = [
+    "DSA",
+    "DBMS",
+    "OS",
+    "Networks",
+    "OOP",
+] as const;
+
+type RoundCategory = (typeof ALLOWED_CATEGORIES)[number];
+
+export async function submitRoundAnswer(
     token: string,
+    category: RoundCategory,
     questionId: string,
     answer: string
 ) {
     if (
         !/^[a-f0-9]{64}$/i.test(token) ||
+        !ALLOWED_CATEGORIES.includes(category) ||
         !questionId ||
         !answer.trim() ||
         answer.length > 20000
@@ -18,6 +30,7 @@ export async function submitDSAAnswer(
         return {
             success: false,
             error: "Please provide a valid answer.",
+            completed: false,
         };
     }
 
@@ -28,18 +41,22 @@ export async function submitDSAAnswer(
     const supabase = await createClient();
 
     const { data, error } = await supabase.rpc(
-        "submit_candidate_dsa_answer",
+        "submit_candidate_round_answer",
         {
             p_token_hash: tokenHash,
+            p_category: category,
             p_question_id: questionId,
             p_answer: answer.trim(),
         }
     );
 
     if (error) {
+        console.error("Round submission error:", error.message);
+
         return {
             success: false,
             error: "Unable to submit your answer. Please try again.",
+            completed: false,
         };
     }
 
@@ -47,17 +64,20 @@ export async function submitDSAAnswer(
         success?: boolean;
         error?: string;
         message?: string;
+        completed?: boolean;
     };
 
     if (!result?.success) {
         return {
             success: false,
             error: result?.error ?? "Answer submission failed.",
+            completed: false,
         };
     }
 
     return {
         success: true,
         message: result.message ?? "Answer submitted successfully.",
+        completed: result.completed ?? false,
     };
 }

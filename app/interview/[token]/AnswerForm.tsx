@@ -3,14 +3,23 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { submitDSAAnswer } from "./actions";
+import { submitRoundAnswer } from "./actions";
+
+type RoundCategory =
+    | "DSA"
+    | "DBMS"
+    | "OS"
+    | "Networks"
+    | "OOP";
 
 export default function AnswerForm({
     token,
     questionId,
+    category,
 }: {
     token: string;
     questionId: string;
+    category: RoundCategory;
 }) {
     const router = useRouter();
 
@@ -18,7 +27,9 @@ export default function AnswerForm({
     const [error, setError] = useState("");
     const [isPending, startTransition] = useTransition();
 
-    function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    function handleSubmit(
+        event: React.FormEvent<HTMLFormElement>
+    ) {
         event.preventDefault();
         setError("");
 
@@ -28,8 +39,9 @@ export default function AnswerForm({
         }
 
         startTransition(async () => {
-            const result = await submitDSAAnswer(
+            const result = await submitRoundAnswer(
                 token,
+                category,
                 questionId,
                 answer
             );
@@ -40,6 +52,8 @@ export default function AnswerForm({
             }
 
             setAnswer("");
+
+            // Refresh the server-rendered question and progress.
             router.refresh();
         });
     }
@@ -63,11 +77,13 @@ export default function AnswerForm({
                 <textarea
                     id="candidateAnswer"
                     value={answer}
-                    onChange={(event) => setAnswer(event.target.value)}
+                    onChange={(event) =>
+                        setAnswer(event.target.value)
+                    }
                     maxLength={20000}
                     rows={10}
                     disabled={isPending}
-                    placeholder="Explain your approach, algorithm, and reasoning here..."
+                    placeholder="Explain your approach, reasoning, and answer here..."
                     className="w-full resize-y rounded-xl border border-gray-300 bg-white p-4 font-mono text-sm leading-6 text-gray-800 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-gray-50"
                 />
             </div>
@@ -97,3 +113,4 @@ export default function AnswerForm({
         </form>
     );
 }
+

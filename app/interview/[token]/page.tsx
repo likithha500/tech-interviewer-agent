@@ -5,6 +5,16 @@ import { createHash } from "node:crypto";
 import { createClient } from "@/lib/supabase/server";
 import AnswerForm from "./AnswerForm";
 
+const ROUND_CATEGORIES = [
+    "DSA",
+    "DBMS",
+    "OS",
+    "Networks",
+    "OOP",
+] as const;
+
+type RoundCategory = (typeof ROUND_CATEGORIES)[number];
+
 interface CandidateInterview {
     interview_id: string;
     candidate_name: string;
@@ -12,7 +22,7 @@ interface CandidateInterview {
     scheduled_at: string | null;
 }
 
-interface DSAQuestion {
+interface InterviewQuestion {
     interview_id: string;
     candidate_name: string;
     question_id: string;
@@ -23,7 +33,8 @@ interface DSAQuestion {
     marks: number;
 }
 
-interface DSAProgress {
+interface RoundProgress {
+    category: string;
     total: number;
     answered: number;
     easy_total: number;
@@ -68,53 +79,72 @@ async function InterviewContent({
         return <WelcomeScreen interview={interview} />;
     }
 
-    const { data: progressData, error: progressError } =
-        await supabase.rpc(
-            "get_candidate_dsa_progress",
-            { p_token_hash: tokenHash }
-        );
+    // Find the first round that still has unanswered questions.
+    for (const category of ROUND_CATEGORIES) {
+        const { data: questionData, error: questionError } =
+            await supabase.rpc(
+                "get_candidate_round_question",
+                {
+                    p_token_hash: tokenHash,
+                    p_category: category,
+                }
+            );
 
-    if (progressError || !progressData) {
+        if (questionError) {
+            console.error(
+                `Question loading failed for ${category}:`,
+                questionError.message
+            );
+
+            return (
+                <MessageScreen
+                    title="Unable to load your interview"
+                    message="Please refresh the page or contact your interviewer."
+                />
+            );
+        }
+
+        // No unanswered question in this category.
+        // Continue to the next round.
+        if (!questionData) {
+            continue;
+        }
+
+        const { data: progressData, error: progressError } =
+            await supabase.rpc(
+                "get_candidate_round_progress",
+                {
+                    p_token_hash: tokenHash,
+                    p_category: category,
+                }
+            );
+
+        if (progressError || !progressData) {
+            return (
+                <MessageScreen
+                    title="Unable to load interview progress"
+                    message="Please refresh the page or contact your interviewer."
+                />
+            );
+        }
+
+        const question =
+            questionData as unknown as InterviewQuestion;
+
+        const progress =
+            progressData as unknown as RoundProgress;
+
         return (
-            <MessageScreen
-                title="Unable to load interview progress"
-                message="Please refresh the page or contact your interviewer."
+            <RoundQuestionScreen
+                question={question}
+                progress={progress}
+                token={token}
+                category={category}
             />
         );
     }
 
-    const progress = progressData as unknown as DSAProgress;
-
-    const { data: questionData, error: questionError } =
-        await supabase.rpc(
-            "get_candidate_dsa_question",
-            { p_token_hash: tokenHash }
-        );
-
-    if (questionError) {
-        return (
-            <MessageScreen
-                title="Unable to load your question"
-                message="Please contact your interviewer for assistance."
-            />
-        );
-    }
-
-    if (!questionData) {
-        return (
-            <DSACompletedScreen progress={progress} />
-        );
-    }
-
-    const question = questionData as unknown as DSAQuestion;
-
-    return (
-        <DSAQuestionScreen
-            question={question}
-            token={token}
-            progress={progress}
-        />
-    );
+    return <AllRoundsCompletedScreen />;
 }
 
 function WelcomeScreen({
@@ -149,16 +179,16 @@ function WelcomeScreen({
                         <span className="text-sm text-gray-500">
                             Scheduled date
                         </span>
+
                         <span className="text-right text-sm font-medium text-gray-900">
                             {interview.scheduled_at
-                                ? new Date(interview.scheduled_at).toLocaleString(
-                                    "en-IN",
-                                    {
-                                        dateStyle: "medium",
-                                        timeStyle: "short",
-                                        timeZone: "Asia/Kolkata",
-                                    }
-                                )
+                                ? new Date(
+                                    interview.scheduled_at
+                                ).toLocaleString("en-IN", {
+                                    dateStyle: "medium",
+                                    timeStyle: "short",
+                                    timeZone: "Asia/Kolkata",
+                                })
                                 : "To be announced"}
                         </span>
                     </div>
@@ -171,7 +201,7 @@ function WelcomeScreen({
 
                     <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-gray-600">
                         <li>Ensure you have a stable internet connection.</li>
-                        <li>Use a laptop or desktop for the coding round.</li>
+                        <li>Use a laptop or desktop for the interview.</li>
                         <li>Read each question carefully before answering.</li>
                         <li>Explain your approach and reasoning clearly.</li>
                     </ul>
@@ -191,27 +221,34 @@ function WelcomeScreen({
     );
 }
 
-function DSAQuestionScreen({
+function RoundQuestionScreen({
     question,
-    token,
     progress,
+    token,
+    category,
 }: {
-    question: DSAQuestion;
+    question: InterviewQuestion;
+    progress: RoundProgress;
     token: string;
-    progress: DSAProgress;
+    category: RoundCategory;
 }) {
-    const percentage = progress.total > 0
-        ? Math.round((progress.answered / progress.total) * 100)
-        : 0;
+    const percentage =
+        progress.total > 0
+            ? Math.round(
+                (progress.answered / progress.total) * 100
+            )
+            : 0;
 
     return (
         <main className="min-h-screen bg-gray-50 px-4 py-8">
             <div className="mx-auto max-w-4xl space-y-6">
+
                 <header className="flex flex-wrap items-center justify-between gap-4">
                     <div>
                         <p className="text-sm font-semibold uppercase tracking-wider text-blue-600">
                             Tech Interviewer Agent
                         </p>
+
                         <h1 className="mt-1 text-2xl font-bold text-gray-900">
                             Technical Interview
                         </h1>
@@ -224,8 +261,9 @@ function DSAQuestionScreen({
                     <div className="flex flex-wrap items-center justify-between gap-3">
                         <div>
                             <h2 className="text-lg font-semibold text-gray-900">
-                                DSA Round Progress
+                                {category} Round Progress
                             </h2>
+
                             <p className="mt-1 text-sm text-gray-500">
                                 {progress.answered} of {progress.total} questions completed
                             </p>
@@ -242,7 +280,7 @@ function DSAQuestionScreen({
                         aria-valuenow={percentage}
                         aria-valuemin={0}
                         aria-valuemax={100}
-                        aria-label="Overall DSA progress"
+                        aria-label={`${category} round progress`}
                     >
                         <div
                             className="h-full rounded-full bg-blue-600 transition-all duration-300"
@@ -280,13 +318,17 @@ function DSAQuestionScreen({
                             <p className="text-sm text-gray-500">
                                 {question.category} / {question.topic}
                             </p>
+
                             <h2 className="mt-1 text-lg font-semibold text-gray-900">
-                                DSA Round
+                                {category} Round
                             </h2>
                         </div>
 
                         <div className="flex items-center gap-3">
-                            <DifficultyBadge difficulty={question.difficulty} />
+                            <DifficultyBadge
+                                difficulty={question.difficulty}
+                            />
+
                             <span className="rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700">
                                 {question.marks} marks
                             </span>
@@ -305,14 +347,15 @@ function DSAQuestionScreen({
 
                     <div className="mb-8 rounded-lg border border-blue-100 bg-blue-50 p-4">
                         <p className="text-sm font-medium text-blue-800">
-                            Take your time to understand the problem and
-                            explain your approach clearly.
+                            Read the question carefully and explain your
+                            reasoning clearly.
                         </p>
                     </div>
 
                     <AnswerForm
                         token={token}
                         questionId={question.question_id}
+                        category={category}
                     />
                 </section>
 
@@ -335,9 +378,10 @@ function DifficultyProgress({
     total: number;
     color: string;
 }) {
-    const percentage = total > 0
-        ? Math.round((answered / total) * 100)
-        : 0;
+    const percentage =
+        total > 0
+            ? Math.round((answered / total) * 100)
+            : 0;
 
     return (
         <div className="rounded-lg border border-gray-100 p-4">
@@ -345,6 +389,7 @@ function DifficultyProgress({
                 <span className="text-sm font-semibold text-gray-700">
                     {label}
                 </span>
+
                 <span className="text-xs font-medium text-gray-500">
                     {answered}/{total}
                 </span>
@@ -360,11 +405,7 @@ function DifficultyProgress({
     );
 }
 
-function DSACompletedScreen({
-    progress,
-}: {
-    progress: DSAProgress;
-}) {
+function AllRoundsCompletedScreen() {
     return (
         <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-10">
             <section className="w-full max-w-xl rounded-2xl border border-gray-200 bg-white p-8 text-center shadow-sm">
@@ -373,24 +414,26 @@ function DSACompletedScreen({
                 </div>
 
                 <h1 className="mt-5 text-2xl font-bold text-gray-900">
-                    DSA Round Completed
+                    Technical Interview Completed
                 </h1>
 
-                <p className="mt-2 text-gray-500">
-                    You have answered all currently available DSA questions.
+                <p className="mt-3 text-gray-500">
+                    Congratulations! You have completed all available
+                    technical interview questions.
                 </p>
 
-                <div className="mt-6 rounded-xl bg-gray-50 p-5">
-                    <p className="text-sm text-gray-500">
-                        Questions completed
+                <div className="mt-6 rounded-xl border border-gray-100 bg-gray-50 p-5">
+                    <p className="text-sm font-semibold text-gray-800">
+                        All technical rounds completed
                     </p>
-                    <p className="mt-1 text-3xl font-bold text-gray-900">
-                        {progress.answered}/{progress.total}
+
+                    <p className="mt-2 text-sm text-gray-500">
+                        DSA · DBMS · OS · Networks · OOP
                     </p>
                 </div>
 
                 <p className="mt-6 text-sm text-gray-600">
-                    Please wait for your interviewer for the next round.
+                    Please wait for your interviewer for the next steps.
                 </p>
             </section>
         </main>
@@ -405,7 +448,11 @@ function StatusBadge({ status }: { status: string }) {
     );
 }
 
-function DifficultyBadge({ difficulty }: { difficulty: string }) {
+function DifficultyBadge({
+    difficulty,
+}: {
+    difficulty: string;
+}) {
     const styles: Record<string, string> = {
         Easy: "bg-green-100 text-green-700",
         Medium: "bg-amber-100 text-amber-700",
@@ -413,7 +460,11 @@ function DifficultyBadge({ difficulty }: { difficulty: string }) {
     };
 
     return (
-        <span className={`rounded-full px-3 py-1 text-xs font-semibold ${styles[difficulty] ?? "bg-gray-100 text-gray-700"}`}>
+        <span
+            className={`rounded-full px-3 py-1 text-xs font-semibold ${styles[difficulty] ??
+                "bg-gray-100 text-gray-700"
+                }`}
+        >
             {difficulty}
         </span>
     );
@@ -432,7 +483,10 @@ function MessageScreen({
                 <h1 className="text-xl font-semibold text-gray-900">
                     {title}
                 </h1>
-                <p className="mt-3 text-sm text-gray-500">{message}</p>
+
+                <p className="mt-3 text-sm text-gray-500">
+                    {message}
+                </p>
             </div>
         </main>
     );
@@ -466,4 +520,3 @@ export default function CandidateInterviewPage({
         </Suspense>
     );
 }
-
