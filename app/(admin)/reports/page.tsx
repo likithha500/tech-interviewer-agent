@@ -3,7 +3,9 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { EvaluateButton } from "./EvaluateButton";
 import { SkillBreakdown } from "./SkillBreakdown";
-
+import { HumanReviewButtons } from "./HumanReviewButtons";
+import { connection } from "next/server";
+import { Suspense } from "react";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type EvidenceItem = {
@@ -57,9 +59,8 @@ function RecommendationBadge({
   };
   return (
     <span
-      className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-        colors[value] ?? "bg-gray-100 text-gray-700"
-      }`}
+      className={`rounded-full px-2 py-0.5 text-xs font-medium ${colors[value] ?? "bg-gray-100 text-gray-700"
+        }`}
     >
       {value}
     </span>
@@ -75,9 +76,8 @@ function ReviewBadge({ value }: { value: string | null | undefined }) {
   };
   return (
     <span
-      className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-        colors[value] ?? "bg-gray-100 text-gray-700"
-      }`}
+      className={`rounded-full px-2 py-0.5 text-xs font-medium ${colors[value] ?? "bg-gray-100 text-gray-700"
+        }`}
     >
       {value}
     </span>
@@ -86,9 +86,8 @@ function ReviewBadge({ value }: { value: string | null | undefined }) {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default async function ReportsPage() {
-  // Auth is already enforced by the admin layout (redirects to /login if not admin).
-  // We use the admin client here so we can join evaluations without RLS limitations.
+async function ReportsContent() {
+  await connection();
   const supabase = await createClient();
   const {
     data: { user },
@@ -239,7 +238,18 @@ export default async function ReportsPage() {
                 </td>
 
                 <td className="p-4">
-                  <ReviewBadge value={item.report?.human_review_status} />
+                  <div className="flex flex-col gap-2">
+                    <ReviewBadge value={item.report?.human_review_status} />
+
+                    {item.report && (
+                      <HumanReviewButtons
+                        interviewId={item.id}
+                        currentDecision={
+                          item.report.human_review_status
+                        }
+                      />
+                    )}
+                  </div>
                 </td>
 
                 <td className="p-4 max-w-xs">
@@ -294,5 +304,12 @@ export default async function ReportsPage() {
         )}
       </div>
     </div>
+  );
+}
+export default function ReportsPage() {
+  return (
+    <Suspense fallback={<div className="p-6">Loading reports...</div>}>
+      <ReportsContent />
+    </Suspense>
   );
 }

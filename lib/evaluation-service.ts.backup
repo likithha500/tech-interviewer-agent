@@ -1,0 +1,108 @@
+
+$path = "lib/evaluation-service.ts"
+
+# Make a backup first
+Copy - Item $path "$path.backup" - Force
+
+$content = Get - Content - LiteralPath $path - Raw
+
+# Restore the required imports
+if ($content - notmatch 'import "server-only"') {
+  $content = 'import "server-only";' + "`r`n" + $content
+}
+
+if ($content - notmatch 'import \{ createAdminClient \}') {
+  $content = 'import { createAdminClient } from "@/lib/supabase/admin";' + "`r`n" + $content
+}
+
+# Replace the old per - answer Gemini calls with one batch call
+$startMarker = "  // 5. Evaluate non-coding answers."
+$endMarker = "  // 6. Aggregate coding submissions."
+
+$start = $content.IndexOf($startMarker)
+$end = $content.IndexOf($endMarker)
+
+if ($start - lt 0 - or $end - le $start) {
+  throw "Could not locate evaluation section. File was not modified."
+}
+
+$replacement = @'
+// 5. Grade all non-coding answers in one Gemini request.
+const skillBuckets = new Map<
+  string,
+  { evals: EvidenceItem[]; pending: boolean }
+>();
+
+const writtenItems = (responses ?? [])
+  .map((response) => {
+    const question = questionMap.get(
+      response.question_id as string
+    );
+
+    if (!question || question.category === "Coding") {
+      return null;
+    }
+
+    return {
+      question,
+      answer: (response.answer ?? "") as string,
+    };
+  })
+  .filter(
+    (
+      item
+    ): item is {
+      question: QuestionForEval;
+      answer: string;
+    } => item !== null
+  );
+
+const batchResults = await evaluateWrittenAnswersBatch(
+  writtenItems
+);
+
+for (let i = 0; i < writtenItems.length; i++) {
+  const { question } = writtenItems[i];
+  const evaluation = batchResults[i];
+
+  const skill = categoryToSkill(question.category);
+
+  const bucket = skillBuckets.get(skill) ?? {
+    evals: [],
+    pending: false,
+  };
+
+  bucket.evals.push({
+    questionId: question.id,
+    question: question.question,
+    score: evaluation.score,
+    maxScore: evaluation.maxScore,
+    feedback: evaluation.feedback,
+    matched_key_points: evaluation.matched_key_points,
+    missing_key_points: evaluation.missing_key_points,
+    quotes: evaluation.evidence,
+  });
+
+  if (evaluation.pending) {
+    bucket.pending = true;
+  }
+
+  skillBuckets.set(skill, bucket);
+}
+
+'@
+
+$content = $content.Substring(0, $start) +
+  $replacement + "`r`n" +
+  $content.Substring($end)
+
+# Update the outdated Anthropic error message
+$content = $content.Replace(
+  "Configure ANTHROPIC_API_KEY before generating a report.",
+  "Check Gemini API configuration, quota, and server logs."
+)
+
+Set - Content - LiteralPath $path - Value $content - Encoding utf8
+
+Write - Host "Evaluation service updated successfully!" - ForegroundColor Green
+Write - Host "Backup saved as lib/evaluation-service.ts.backup"

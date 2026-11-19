@@ -61,13 +61,12 @@ export function SkillBreakdown({ skills }: { skills: SkillRow[] }) {
                 {pct != null && (
                   <div className="h-1.5 w-full rounded-full bg-gray-200">
                     <div
-                      className={`h-1.5 rounded-full ${
-                        pct >= 70
+                      className={`h-1.5 rounded-full ${pct >= 70
                           ? "bg-green-500"
                           : pct >= 50
-                          ? "bg-amber-400"
-                          : "bg-red-400"
-                      }`}
+                            ? "bg-amber-400"
+                            : "bg-red-400"
+                        }`}
                       style={{ width: `${pct}%` }}
                     />
                   </div>
@@ -90,7 +89,9 @@ export function SkillBreakdown({ skills }: { skills: SkillRow[] }) {
                           className="rounded border border-gray-200 bg-white p-2 text-xs"
                         >
                           <p className="font-medium text-gray-700">
-                            {item.question.slice(0, 100)}
+                            {typeof item.question === "string"
+                              ? item.question.slice(0, 100)
+                              : "Question details unavailable"}
                           </p>
                           <p className="text-gray-500">
                             Score: {item.score}/{item.maxScore}
