@@ -4,6 +4,7 @@ import { connection } from "next/server";
 import { createHash } from "node:crypto";
 import { createClient } from "@/lib/supabase/server";
 import AnswerForm from "./AnswerForm";
+import CodeEditor from "./CodeEditor";
 
 const ROUND_CATEGORIES = [
     "DSA",
@@ -11,6 +12,7 @@ const ROUND_CATEGORIES = [
     "OS",
     "Networks",
     "OOP",
+    "Coding",
 ] as const;
 
 type RoundCategory = (typeof ROUND_CATEGORIES)[number];
@@ -79,7 +81,6 @@ async function InterviewContent({
         return <WelcomeScreen interview={interview} />;
     }
 
-    // Find the first round that still has unanswered questions.
     for (const category of ROUND_CATEGORIES) {
         const { data: questionData, error: questionError } =
             await supabase.rpc(
@@ -104,8 +105,6 @@ async function InterviewContent({
             );
         }
 
-        // No unanswered question in this category.
-        // Continue to the next round.
         if (!questionData) {
             continue;
         }
@@ -241,8 +240,7 @@ function RoundQuestionScreen({
 
     return (
         <main className="min-h-screen bg-gray-50 px-4 py-8">
-            <div className="mx-auto max-w-4xl space-y-6">
-
+            <div className="mx-auto max-w-5xl space-y-6">
                 <header className="flex flex-wrap items-center justify-between gap-4">
                     <div>
                         <p className="text-sm font-semibold uppercase tracking-wider text-blue-600">
@@ -347,16 +345,24 @@ function RoundQuestionScreen({
 
                     <div className="mb-8 rounded-lg border border-blue-100 bg-blue-50 p-4">
                         <p className="text-sm font-medium text-blue-800">
-                            Read the question carefully and explain your
-                            reasoning clearly.
+                            {category === "Coding"
+                                ? "Choose a programming language and implement your solution."
+                                : "Read the question carefully and explain your reasoning clearly."}
                         </p>
                     </div>
 
-                    <AnswerForm
-                        token={token}
-                        questionId={question.question_id}
-                        category={category}
-                    />
+                    {category === "Coding" ? (
+                        <CodeEditor
+                            token={token}
+                            questionId={question.question_id}
+                        />
+                    ) : (
+                        <AnswerForm
+                            token={token}
+                            questionId={question.question_id}
+                            category={category}
+                        />
+                    )}
                 </section>
 
                 <p className="text-center text-xs text-gray-400">
@@ -418,17 +424,16 @@ function AllRoundsCompletedScreen() {
                 </h1>
 
                 <p className="mt-3 text-gray-500">
-                    Congratulations! You have completed all available
-                    technical interview questions.
+                    Congratulations! You have completed all available technical interview questions.
                 </p>
 
                 <div className="mt-6 rounded-xl border border-gray-100 bg-gray-50 p-5">
                     <p className="text-sm font-semibold text-gray-800">
-                        All technical rounds completed
+                        All six technical rounds completed
                     </p>
 
                     <p className="mt-2 text-sm text-gray-500">
-                        DSA · DBMS · OS · Networks · OOP
+                        DSA · DBMS · OS · Networks · OOP · Coding
                     </p>
                 </div>
 
@@ -448,11 +453,7 @@ function StatusBadge({ status }: { status: string }) {
     );
 }
 
-function DifficultyBadge({
-    difficulty,
-}: {
-    difficulty: string;
-}) {
+function DifficultyBadge({ difficulty }: { difficulty: string }) {
     const styles: Record<string, string> = {
         Easy: "bg-green-100 text-green-700",
         Medium: "bg-amber-100 text-amber-700",
@@ -461,8 +462,7 @@ function DifficultyBadge({
 
     return (
         <span
-            className={`rounded-full px-3 py-1 text-xs font-semibold ${styles[difficulty] ??
-                "bg-gray-100 text-gray-700"
+            className={`rounded-full px-3 py-1 text-xs font-semibold ${styles[difficulty] ?? "bg-gray-100 text-gray-700"
                 }`}
         >
             {difficulty}
