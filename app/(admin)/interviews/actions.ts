@@ -54,6 +54,7 @@ export async function scheduleInterview(formData: FormData) {
         candidate_id: candidateId,
         scheduled_at: scheduledDate.toISOString(),
         status: "Scheduled",
+        round_plan_version: "three_round",
     });
 
     if (error) {

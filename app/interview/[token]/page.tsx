@@ -8,10 +8,7 @@ import CodeEditor from "./CodeEditor";
 
 const ROUND_CATEGORIES = [
     "DSA",
-    "DBMS",
-    "OS",
-    "Networks",
-    "OOP",
+    "Core CS",
     "Coding",
 ] as const;
 
@@ -429,11 +426,11 @@ function AllRoundsCompletedScreen() {
 
                 <div className="mt-6 rounded-xl border border-gray-100 bg-gray-50 p-5">
                     <p className="text-sm font-semibold text-gray-800">
-                        All six technical rounds completed
+                        All three technical rounds completed
                     </p>
 
                     <p className="mt-2 text-sm text-gray-500">
-                        DSA · DBMS · OS · Networks · OOP · Coding
+                        DSA · Core CS · Coding
                     </p>
                 </div>
 

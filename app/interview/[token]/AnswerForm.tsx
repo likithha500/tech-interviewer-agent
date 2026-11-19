@@ -7,10 +7,7 @@ import { submitRoundAnswer } from "./actions";
 
 type RoundCategory =
     | "DSA"
-    | "DBMS"
-    | "OS"
-    | "Networks"
-    | "OOP";
+    | "Core CS";
 
 export default function AnswerForm({
     token,
