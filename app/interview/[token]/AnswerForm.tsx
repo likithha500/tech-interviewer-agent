@@ -1,9 +1,9 @@
-
 "use client";
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { submitRoundAnswer } from "./actions";
+import { Send, AlertCircle } from "lucide-react";
 
 type RoundCategory =
     | "DSA"
@@ -61,13 +61,13 @@ export default function AnswerForm({
                 <div className="mb-2 flex items-center justify-between">
                     <label
                         htmlFor="candidateAnswer"
-                        className="text-sm font-semibold text-gray-900"
+                        className="text-xs font-bold uppercase tracking-wider text-slate-700"
                     >
-                        Your Answer
+                        Your Technical Explanation
                     </label>
 
-                    <span className="text-xs text-gray-400">
-                        {answer.length}/20000
+                    <span className="text-xs font-mono text-slate-400">
+                        {answer.length}/20,000 characters
                     </span>
                 </div>
 
@@ -80,34 +80,35 @@ export default function AnswerForm({
                     maxLength={20000}
                     rows={10}
                     disabled={isPending}
-                    placeholder="Explain your approach, reasoning, and answer here..."
-                    className="w-full resize-y rounded-xl border border-gray-300 bg-white p-4 font-mono text-sm leading-6 text-gray-800 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-gray-50"
+                    placeholder="Provide your technical explanation, algorithm breakdown, edge case handling, and complexity analysis..."
+                    className="w-full resize-y rounded-2xl border border-slate-200 bg-slate-50/50 p-4 font-mono text-sm leading-relaxed text-slate-900 outline-none transition focus:border-indigo-600 focus:bg-white focus:ring-3 focus:ring-indigo-100 disabled:bg-slate-100"
                 />
             </div>
 
             {error && (
-                <p
+                <div
                     role="alert"
-                    className="rounded-lg bg-red-50 p-3 text-sm text-red-700"
+                    className="flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50/80 p-3.5 text-xs text-rose-800"
                 >
-                    {error}
-                </p>
+                    <AlertCircle className="h-4 w-4 shrink-0 text-rose-600" />
+                    <span>{error}</span>
+                </div>
             )}
 
-            <div className="flex flex-wrap items-center justify-between gap-3">
-                <p className="text-xs text-gray-400">
-                    Your submitted answer will be saved for evaluation.
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+                <p className="text-xs text-slate-400">
+                    Your response will be evaluated using Groq AI for technical correctness, clarity, and key concepts.
                 </p>
 
                 <button
                     type="submit"
                     disabled={isPending || !answer.trim()}
-                    className="rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm shadow-indigo-100 transition hover:bg-indigo-700 active:scale-98 disabled:cursor-not-allowed disabled:opacity-50"
                 >
+                    <Send className="h-4 w-4" />
                     {isPending ? "Submitting..." : "Submit Answer"}
                 </button>
             </div>
         </form>
     );
 }
-

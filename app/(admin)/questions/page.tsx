@@ -3,6 +3,16 @@ import { Suspense } from "react";
 import { connection } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { addQuestion, toggleQuestionStatus } from "./actions";
+import {
+  BookOpen,
+  PlusCircle,
+  CheckCircle2,
+  AlertCircle,
+  HelpCircle,
+  Sparkles,
+  Layers,
+  Code2,
+} from "lucide-react";
 
 interface Question {
   id: string;
@@ -36,55 +46,59 @@ async function QuestionsList() {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-gray-900">
-          Question Bank
-        </h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Manage technical questions used in candidate interviews.
-        </p>
-      </div>
-
+    <div className="space-y-8">
       {error && (
-        <div className="rounded-lg bg-red-50 p-4 text-sm text-red-700">
+        <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
           Failed to load questions: {error.message}
         </div>
       )}
 
+      {/* KPI Cards */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard label="Total Questions" value={questions.length} />
-        <StatCard label="Active Questions" value={activeCount} />
-        <StatCard label="Inactive Questions" value={inactiveCount} />
-        <StatCard label="Hard Questions" value={difficultyCount.Hard} />
+        <StatCard label="Active in Bank" value={activeCount} badge="Ready" />
+        <StatCard label="Inactive" value={inactiveCount} />
+        <StatCard label="Hard Challenge" value={difficultyCount.Hard} />
       </div>
 
+      {/* Difficulty Breakdown Pill Row */}
       <div className="grid grid-cols-3 gap-3">
-        <DifficultyCard label="Easy" value={difficultyCount.Easy} />
-        <DifficultyCard label="Medium" value={difficultyCount.Medium} />
-        <DifficultyCard label="Hard" value={difficultyCount.Hard} />
+        <DifficultyCard label="Easy" value={difficultyCount.Easy} color="text-emerald-600 bg-emerald-50 border-emerald-100" />
+        <DifficultyCard label="Medium" value={difficultyCount.Medium} color="text-amber-600 bg-amber-50 border-amber-100" />
+        <DifficultyCard label="Hard" value={difficultyCount.Hard} color="text-rose-600 bg-rose-50 border-rose-100" />
       </div>
 
-      <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-        <h2 className="text-lg font-semibold text-gray-900">
-          Add a Question
-        </h2>
+      {/* Add a Question Card */}
+      <section className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xs">
+        <div className="flex items-center gap-2.5 border-b border-slate-100 pb-4">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+            <PlusCircle className="h-4 w-4" />
+          </div>
+          <div>
+            <h2 className="text-base font-bold text-slate-900">
+              Create Question
+            </h2>
+            <p className="text-xs text-slate-400">
+              Add technical problems to DSA, Core CS, or Coding rounds
+            </p>
+          </div>
+        </div>
 
         <form action={addQuestion} className="mt-5 space-y-4">
           <div className="grid gap-4 sm:grid-cols-3">
-            <FormField label="Category" name="category" placeholder="e.g. DSA" required />
-            <FormField label="Topic" name="topic" placeholder="e.g. Arrays" required />
+            <FormField label="Category" name="category" placeholder="e.g. DSA or Core CS" required />
+            <FormField label="Topic" name="topic" placeholder="e.g. Arrays, OS, Networks" required />
 
             <div>
-              <label htmlFor="difficulty" className="mb-2 block text-sm font-medium text-gray-700">
-                Difficulty
+              <label htmlFor="difficulty" className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-600">
+                Difficulty <span className="text-rose-500">*</span>
               </label>
               <select
                 id="difficulty"
                 name="difficulty"
                 required
                 defaultValue="Medium"
-                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-500"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-indigo-600 focus:bg-white focus:ring-3 focus:ring-indigo-100"
               >
                 <option value="Easy">Easy</option>
                 <option value="Medium">Medium</option>
@@ -94,30 +108,30 @@ async function QuestionsList() {
           </div>
 
           <div>
-            <label htmlFor="question" className="mb-2 block text-sm font-medium text-gray-700">
-              Question
+            <label htmlFor="question" className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-600">
+              Question Prompt <span className="text-rose-500">*</span>
             </label>
             <textarea
               id="question"
               name="question"
               rows={3}
               required
-              placeholder="Enter the interview question..."
-              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm outline-none focus:border-blue-500"
+              placeholder="Enter the full technical question prompt..."
+              className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-indigo-600 focus:bg-white focus:ring-3 focus:ring-indigo-100"
             />
           </div>
 
           <div>
-            <label htmlFor="expectedAnswer" className="mb-2 block text-sm font-medium text-gray-700">
-              Expected Answer / Evaluation Reference
+            <label htmlFor="expectedAnswer" className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-600">
+              Expected Answer / Evaluation Criteria <span className="text-rose-500">*</span>
             </label>
             <textarea
               id="expectedAnswer"
               name="expectedAnswer"
               rows={3}
               required
-              placeholder="Describe the expected answer..."
-              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm outline-none focus:border-blue-500"
+              placeholder="Describe the expected technical answer, key concepts, and nuances..."
+              className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-indigo-600 focus:bg-white focus:ring-3 focus:ring-indigo-100"
             />
           </div>
 
@@ -125,7 +139,7 @@ async function QuestionsList() {
             <FormField
               label="Time Complexity"
               name="timeComplexity"
-              placeholder="e.g. O(n)"
+              placeholder="e.g. O(n log n)"
             />
             <FormField
               label="Space Complexity"
@@ -133,8 +147,8 @@ async function QuestionsList() {
               placeholder="e.g. O(1)"
             />
             <div>
-              <label htmlFor="marks" className="mb-2 block text-sm font-medium text-gray-700">
-                Marks
+              <label htmlFor="marks" className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-600">
+                Marks / Weight <span className="text-rose-500">*</span>
               </label>
               <input
                 id="marks"
@@ -144,81 +158,99 @@ async function QuestionsList() {
                 max="100"
                 defaultValue="10"
                 required
-                className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm outline-none focus:border-blue-500"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-indigo-600 focus:bg-white focus:ring-3 focus:ring-indigo-100"
               />
             </div>
           </div>
 
-          <button
-            type="submit"
-            className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700"
-          >
-            Add Question
-          </button>
+          <div className="flex justify-end pt-2">
+            <button
+              type="submit"
+              className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-indigo-100 transition hover:bg-indigo-700 active:scale-98"
+            >
+              <PlusCircle className="h-4 w-4" />
+              Add to Question Bank
+            </button>
+          </div>
         </form>
       </section>
 
-      <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-        <div className="border-b border-gray-200 px-6 py-4">
-          <h2 className="text-lg font-semibold text-gray-900">
-            All Questions
+      {/* Questions Table */}
+      <section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-xs">
+        <div className="border-b border-slate-100 px-6 py-4">
+          <h2 className="text-base font-bold text-slate-900">
+            Available Assessment Questions
           </h2>
-          <p className="mt-1 text-xs text-gray-500">
-            Questions retrieved directly from Supabase.
+          <p className="mt-0.5 text-xs text-slate-400">
+            Live technical questions currently configured in Supabase.
           </p>
         </div>
 
         {questions.length === 0 ? (
-          <div className="px-6 py-12 text-center text-sm text-gray-500">
-            No questions found.
+          <div className="px-6 py-12 text-center text-sm text-slate-400">
+            No questions configured yet.
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="bg-gray-50 text-xs uppercase text-gray-500">
+              <thead className="bg-slate-50/75 text-xs font-bold uppercase tracking-wider text-slate-500">
                 <tr>
-                  <th className="px-6 py-3 font-medium">Question</th>
-                  <th className="px-6 py-3 font-medium">Category</th>
-                  <th className="px-6 py-3 font-medium">Topic</th>
-                  <th className="px-6 py-3 font-medium">Difficulty</th>
-                  <th className="px-6 py-3 font-medium">Marks</th>
-                  <th className="px-6 py-3 font-medium">Status</th>
-                  <th className="px-6 py-3 font-medium">Action</th>
+                  <th className="px-6 py-3.5">Question</th>
+                  <th className="px-6 py-3.5">Category</th>
+                  <th className="px-6 py-3.5">Topic</th>
+                  <th className="px-6 py-3.5">Difficulty</th>
+                  <th className="px-6 py-3.5">Marks</th>
+                  <th className="px-6 py-3.5">Status</th>
+                  <th className="px-6 py-3.5 text-right">Action</th>
                 </tr>
               </thead>
 
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-slate-100">
                 {questions.map((question) => (
-                  <tr key={question.id} className="align-top hover:bg-gray-50">
-                    <td className="max-w-md px-6 py-4 font-medium text-gray-900">
-                      <p className="line-clamp-3">{question.question}</p>
+                  <tr key={question.id} className="align-top transition-colors hover:bg-slate-50/70">
+                    <td className="max-w-md px-6 py-4 font-medium text-slate-900">
+                      <p className="line-clamp-2 leading-6">{question.question}</p>
                     </td>
-                    <td className="px-6 py-4 text-gray-600">{question.category}</td>
-                    <td className="px-6 py-4 text-gray-600">{question.topic}</td>
+                    <td className="px-6 py-4 text-xs font-semibold text-slate-700">
+                      <span className="rounded-md bg-slate-100 px-2 py-1">
+                        {question.category}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-xs text-slate-600 font-medium">
+                      {question.topic}
+                    </td>
                     <td className="px-6 py-4">
                       <DifficultyBadge difficulty={question.difficulty} />
                     </td>
-                    <td className="px-6 py-4 text-gray-600">{question.marks}</td>
+                    <td className="px-6 py-4 text-xs font-bold text-slate-800">
+                      {question.marks} pts
+                    </td>
                     <td className="px-6 py-4">
-                      <span className={`rounded-full px-3 py-1 text-xs font-medium ${question.is_active
-                          ? "bg-green-100 text-green-700"
-                          : "bg-gray-100 text-gray-600"
-                        }`}>
+                      <span
+                        className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${
+                          question.is_active
+                            ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                            : "border-slate-200 bg-slate-100 text-slate-600"
+                        }`}
+                      >
                         {question.is_active ? "Active" : "Inactive"}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
-                      <form action={toggleQuestionStatus.bind(
-                        null,
-                        question.id,
-                        !question.is_active
-                      )}>
+                    <td className="px-6 py-4 text-right">
+                      <form
+                        action={toggleQuestionStatus.bind(
+                          null,
+                          question.id,
+                          !question.is_active
+                        )}
+                      >
                         <button
                           type="submit"
-                          className={`whitespace-nowrap rounded-lg px-3 py-2 text-xs font-medium ${question.is_active
-                              ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                              : "bg-green-600 text-white hover:bg-green-700"
-                            }`}
+                          className={`whitespace-nowrap rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${
+                            question.is_active
+                              ? "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-300"
+                              : "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                          }`}
                         >
                           {question.is_active ? "Deactivate" : "Activate"}
                         </button>
@@ -248,48 +280,58 @@ function FormField({
 }) {
   return (
     <div>
-      <label htmlFor={name} className="mb-2 block text-sm font-medium text-gray-700">
-        {label}
+      <label htmlFor={name} className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-600">
+        {label} {required && <span className="text-rose-500">*</span>}
       </label>
       <input
         id={name}
         name={name}
         required={required}
         placeholder={placeholder}
-        className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm outline-none focus:border-blue-500"
+        className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-indigo-600 focus:bg-white focus:ring-3 focus:ring-indigo-100"
       />
     </div>
   );
 }
 
-function StatCard({ label, value }: { label: string; value: number }) {
+function StatCard({ label, value, badge }: { label: string; value: number; badge?: string }) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-      <p className="text-sm text-gray-500">{label}</p>
-      <p className="mt-2 text-2xl font-semibold text-gray-900">{value}</p>
+    <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs transition hover:shadow-md">
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-bold uppercase tracking-wider text-slate-400">{label}</p>
+        {badge && (
+          <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+            {badge}
+          </span>
+        )}
+      </div>
+      <p className="mt-2 text-3xl font-extrabold text-slate-900">{value}</p>
     </div>
   );
 }
 
-function DifficultyCard({ label, value }: { label: string; value: number }) {
+function DifficultyCard({ label, value, color }: { label: string; value: number; color: string }) {
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-4">
-      <p className="text-sm text-gray-500">{label}</p>
-      <p className="mt-1 text-xl font-semibold text-gray-900">{value}</p>
+    <div className={`rounded-xl border p-4 text-center ${color}`}>
+      <p className="text-xs font-bold uppercase tracking-wider">{label}</p>
+      <p className="mt-1 text-2xl font-extrabold">{value}</p>
     </div>
   );
 }
 
 function DifficultyBadge({ difficulty }: { difficulty: string }) {
   const styles: Record<string, string> = {
-    Easy: "bg-green-100 text-green-700",
-    Medium: "bg-amber-100 text-amber-700",
-    Hard: "bg-red-100 text-red-700",
+    Easy: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    Medium: "bg-amber-50 text-amber-700 border-amber-200",
+    Hard: "bg-rose-50 text-rose-700 border-rose-200",
   };
 
   return (
-    <span className={`rounded-full px-3 py-1 text-xs font-medium ${styles[difficulty] ?? "bg-gray-100 text-gray-700"
-      }`}>
+    <span
+      className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${
+        styles[difficulty] ?? "bg-slate-100 text-slate-700 border-slate-200"
+      }`}
+    >
       {difficulty}
     </span>
   );
@@ -304,25 +346,28 @@ async function QuestionMessages({
 
   if (params.success === "added") {
     return (
-      <p className="rounded-lg bg-green-50 p-3 text-sm text-green-700">
-        Question added successfully.
-      </p>
+      <div className="flex items-center gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50/80 p-3.5 text-sm font-medium text-emerald-800 shadow-xs">
+        <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+        <span>Question added successfully to the repository.</span>
+      </div>
     );
   }
 
   if (params.success === "updated") {
     return (
-      <p className="rounded-lg bg-green-50 p-3 text-sm text-green-700">
-        Question status updated successfully.
-      </p>
+      <div className="flex items-center gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50/80 p-3.5 text-sm font-medium text-emerald-800 shadow-xs">
+        <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+        <span>Question status updated successfully.</span>
+      </div>
     );
   }
 
   if (params.error) {
     return (
-      <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700">
-        {params.error}
-      </p>
+      <div className="flex items-center gap-2.5 rounded-xl border border-rose-200 bg-rose-50/80 p-3.5 text-sm font-medium text-rose-800 shadow-xs">
+        <AlertCircle className="h-4 w-4 text-rose-600 shrink-0" />
+        <span>{params.error}</span>
+      </div>
     );
   }
 
@@ -335,12 +380,34 @@ export default function QuestionsPage({
   searchParams: Promise<{ success?: string; error?: string }>;
 }) {
   return (
-    <div className="space-y-4">
-      <Suspense fallback={<p className="text-sm text-gray-500">Loading messages...</p>}>
+    <div className="space-y-8">
+      {/* Page Header */}
+      <div>
+        <div className="flex items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-semibold text-indigo-700">
+            <BookOpen className="h-3 w-3" />
+            Evaluation Criteria
+          </span>
+        </div>
+        <h1 className="mt-2 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+          Question Bank
+        </h1>
+        <p className="mt-1 text-sm text-slate-500">
+          Configure DSA algorithms, Core CS systems concepts, and interactive coding prompts.
+        </p>
+      </div>
+
+      <Suspense fallback={null}>
         <QuestionMessages searchParams={searchParams} />
       </Suspense>
 
-      <Suspense fallback={<p className="text-sm text-gray-500">Loading question bank...</p>}>
+      <Suspense
+        fallback={
+          <div className="py-12 text-center text-sm text-slate-400">
+            Loading question bank...
+          </div>
+        }
+      >
         <QuestionsList />
       </Suspense>
     </div>

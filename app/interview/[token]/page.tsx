@@ -5,6 +5,17 @@ import { createHash } from "node:crypto";
 import { createClient } from "@/lib/supabase/server";
 import AnswerForm from "./AnswerForm";
 import CodeEditor from "./CodeEditor";
+import {
+  Code2,
+  Terminal,
+  CheckCircle2,
+  Clock,
+  BookOpen,
+  HelpCircle,
+  Shield,
+  Bot,
+  AlertCircle,
+} from "lucide-react";
 
 const ROUND_CATEGORIES = [
     "DSA",
@@ -149,34 +160,37 @@ function WelcomeScreen({
     interview: CandidateInterview;
 }) {
     return (
-        <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-10">
-            <section className="w-full max-w-2xl rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
-                <p className="text-sm font-semibold uppercase tracking-wider text-blue-600">
-                    Tech Interviewer Agent
-                </p>
+        <main className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-12">
+            <section className="w-full max-w-2xl rounded-2xl border border-slate-200/80 bg-white p-8 shadow-xs">
+                <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">
+                        <Bot className="h-3.5 w-3.5" />
+                        AI Assessment Session
+                    </span>
+                </div>
 
-                <h1 className="mt-3 text-3xl font-bold text-gray-900">
+                <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-slate-900">
                     Welcome, {interview.candidate_name}
                 </h1>
 
-                <p className="mt-2 text-gray-500">
-                    Your technical interview details are available below.
+                <p className="mt-2 text-sm text-slate-500">
+                    Your technical candidate portal is active. Please review session prerequisites below.
                 </p>
 
-                <div className="mt-8 space-y-4 rounded-xl bg-gray-50 p-5">
+                <div className="mt-6 space-y-3 rounded-xl border border-slate-100 bg-slate-50/80 p-5">
                     <div className="flex items-center justify-between gap-4">
-                        <span className="text-sm text-gray-500">
-                            Interview status
+                        <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                            Interview Status
                         </span>
                         <StatusBadge status={interview.status} />
                     </div>
 
-                    <div className="flex items-center justify-between gap-4">
-                        <span className="text-sm text-gray-500">
-                            Scheduled date
+                    <div className="flex items-center justify-between gap-4 pt-2 border-t border-slate-200/60">
+                        <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                            Scheduled Date
                         </span>
 
-                        <span className="text-right text-sm font-medium text-gray-900">
+                        <span className="text-right text-xs font-semibold text-slate-800">
                             {interview.scheduled_at
                                 ? new Date(
                                     interview.scheduled_at
@@ -190,27 +204,27 @@ function WelcomeScreen({
                     </div>
                 </div>
 
-                <div className="mt-8 rounded-xl border border-blue-100 bg-blue-50 p-5">
-                    <h2 className="font-semibold text-gray-900">
-                        Interview Instructions
+                <div className="mt-6 rounded-xl border border-indigo-100 bg-indigo-50/60 p-5">
+                    <h2 className="text-sm font-bold text-indigo-950">
+                        Interview Assessment Instructions
                     </h2>
 
-                    <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-gray-600">
-                        <li>Ensure you have a stable internet connection.</li>
-                        <li>Use a laptop or desktop for the interview.</li>
-                        <li>Read each question carefully before answering.</li>
-                        <li>Explain your approach and reasoning clearly.</li>
+                    <ul className="mt-3 list-disc space-y-2 pl-5 text-xs text-indigo-900/80 leading-relaxed">
+                        <li>Ensure a stable connection; answers are auto-saved on submit.</li>
+                        <li>This interview includes DSA theory, Core CS concepts, and interactive Coding.</li>
+                        <li>In the coding round, your solution will be compiled in a restricted Docker container against automated test cases.</li>
+                        <li>Explain your reasoning and time/space complexity tradeoffs clearly.</li>
                     </ul>
 
-                    <p className="mt-4 text-sm font-medium text-blue-700">
+                    <p className="mt-4 text-xs font-semibold text-indigo-700">
                         {interview.status === "Scheduled"
-                            ? "Your interviewer will start the interview when you are ready."
-                            : "Your interview is not currently active."}
+                            ? "Your interviewer will start this session when ready. Keep this tab open."
+                            : "Your interview is currently inactive."}
                     </p>
                 </div>
 
-                <p className="mt-8 text-center text-xs text-gray-400">
-                    Powered by Tech Interviewer Agent
+                <p className="mt-8 text-center text-xs text-slate-400">
+                    Powered by AutoRecruit AI Assessment Engine
                 </p>
             </section>
         </main>
@@ -236,41 +250,51 @@ function RoundQuestionScreen({
             : 0;
 
     return (
-        <main className="min-h-screen bg-gray-50 px-4 py-8">
+        <main className="min-h-screen bg-slate-50/60 px-4 py-8">
             <div className="mx-auto max-w-5xl space-y-6">
-                <header className="flex flex-wrap items-center justify-between gap-4">
-                    <div>
-                        <p className="text-sm font-semibold uppercase tracking-wider text-blue-600">
-                            Tech Interviewer Agent
-                        </p>
-
-                        <h1 className="mt-1 text-2xl font-bold text-gray-900">
-                            Technical Interview
-                        </h1>
+                {/* Header */}
+                <header className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xs">
+                    <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-xs">
+                            <Bot className="h-5 w-5" />
+                        </div>
+                        <div>
+                            <span className="block text-xs font-bold uppercase tracking-wider text-indigo-600">
+                                AutoRecruit Technical Assessment
+                            </span>
+                            <h1 className="text-xl font-extrabold text-slate-900">
+                                {category} Round
+                            </h1>
+                        </div>
                     </div>
 
-                    <StatusBadge status="In Progress" />
+                    <div className="flex items-center gap-3">
+                        <span className="inline-flex items-center gap-1.5 rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-bold text-indigo-700">
+                            <span className="h-2 w-2 rounded-full bg-indigo-600 animate-pulse" />
+                            Live Session
+                        </span>
+                    </div>
                 </header>
 
-                <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+                {/* Progress Card */}
+                <section className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xs">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                         <div>
-                            <h2 className="text-lg font-semibold text-gray-900">
-                                {category} Round Progress
+                            <h2 className="text-sm font-bold text-slate-900">
+                                Round Progress &amp; Coverage
                             </h2>
-
-                            <p className="mt-1 text-sm text-gray-500">
-                                {progress.answered} of {progress.total} questions completed
+                            <p className="mt-0.5 text-xs text-slate-400">
+                                {progress.answered} of {progress.total} questions answered in this section
                             </p>
                         </div>
 
-                        <span className="text-lg font-bold text-blue-600">
+                        <span className="text-xl font-extrabold text-indigo-600">
                             {percentage}%
                         </span>
                     </div>
 
                     <div
-                        className="mt-4 h-3 overflow-hidden rounded-full bg-gray-100"
+                        className="mt-4 h-2.5 overflow-hidden rounded-full bg-slate-100"
                         role="progressbar"
                         aria-valuenow={percentage}
                         aria-valuemin={0}
@@ -278,17 +302,17 @@ function RoundQuestionScreen({
                         aria-label={`${category} round progress`}
                     >
                         <div
-                            className="h-full rounded-full bg-blue-600 transition-all duration-300"
+                            className="h-full rounded-full bg-indigo-600 transition-all duration-300"
                             style={{ width: `${percentage}%` }}
                         />
                     </div>
 
-                    <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+                    <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
                         <DifficultyProgress
                             label="Easy"
                             answered={progress.easy_answered}
                             total={progress.easy_total}
-                            color="bg-green-500"
+                            color="bg-emerald-500"
                         />
 
                         <DifficultyProgress
@@ -302,50 +326,39 @@ function RoundQuestionScreen({
                             label="Hard"
                             answered={progress.hard_answered}
                             total={progress.hard_total}
-                            color="bg-red-500"
+                            color="bg-rose-500"
                         />
                     </div>
                 </section>
 
-                <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-                    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 pb-5">
+                {/* Question Assessment Card */}
+                <section className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xs">
+                    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
                         <div>
-                            <p className="text-sm text-gray-500">
-                                {question.category} / {question.topic}
-                            </p>
-
-                            <h2 className="mt-1 text-lg font-semibold text-gray-900">
-                                {category} Round
+                            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                                Topic: {question.category} / {question.topic}
+                            </span>
+                            <h2 className="mt-1 text-lg font-bold text-slate-900">
+                                Current Problem
                             </h2>
                         </div>
 
-                        <div className="flex items-center gap-3">
-                            <DifficultyBadge
-                                difficulty={question.difficulty}
-                            />
-
-                            <span className="rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700">
+                        <div className="flex items-center gap-2">
+                            <DifficultyBadge difficulty={question.difficulty} />
+                            <span className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-bold text-slate-700">
                                 {question.marks} marks
                             </span>
                         </div>
                     </div>
 
-                    <div className="py-8">
-                        <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-400">
-                            Question
+                    {/* Question Content Box */}
+                    <div className="my-6 rounded-xl border border-slate-100 bg-slate-50/70 p-5">
+                        <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                            Question Specification
                         </p>
-
-                        <div className="whitespace-pre-wrap text-base leading-8 text-gray-800">
+                        <div className="whitespace-pre-wrap text-sm leading-relaxed text-slate-800 font-medium">
                             {question.question}
                         </div>
-                    </div>
-
-                    <div className="mb-8 rounded-lg border border-blue-100 bg-blue-50 p-4">
-                        <p className="text-sm font-medium text-blue-800">
-                            {category === "Coding"
-                                ? "Choose a programming language and implement your solution."
-                                : "Read the question carefully and explain your reasoning clearly."}
-                        </p>
                     </div>
 
                     {category === "Coding" ? (
@@ -362,8 +375,8 @@ function RoundQuestionScreen({
                     )}
                 </section>
 
-                <p className="text-center text-xs text-gray-400">
-                    Powered by Tech Interviewer Agent
+                <p className="text-center text-xs text-slate-400">
+                    AutoRecruit Agent · Secure Sandboxed Assessment Environment
                 </p>
             </div>
         </main>
@@ -387,18 +400,18 @@ function DifficultyProgress({
             : 0;
 
     return (
-        <div className="rounded-lg border border-gray-100 p-4">
+        <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-3.5">
             <div className="flex items-center justify-between gap-2">
-                <span className="text-sm font-semibold text-gray-700">
+                <span className="text-xs font-bold text-slate-700">
                     {label}
                 </span>
 
-                <span className="text-xs font-medium text-gray-500">
+                <span className="text-xs font-semibold text-slate-500">
                     {answered}/{total}
                 </span>
             </div>
 
-            <div className="mt-3 h-2 overflow-hidden rounded-full bg-gray-100">
+            <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-slate-200">
                 <div
                     className={`h-full rounded-full ${color} transition-all duration-300`}
                     style={{ width: `${percentage}%` }}
@@ -410,32 +423,31 @@ function DifficultyProgress({
 
 function AllRoundsCompletedScreen() {
     return (
-        <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-10">
-            <section className="w-full max-w-xl rounded-2xl border border-gray-200 bg-white p-8 text-center shadow-sm">
-                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100 text-3xl text-green-700">
-                    ✓
+        <main className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-12">
+            <section className="w-full max-w-xl rounded-2xl border border-slate-200/80 bg-white p-8 text-center shadow-xs">
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-100 shadow-xs">
+                    <CheckCircle2 className="h-8 w-8" />
                 </div>
 
-                <h1 className="mt-5 text-2xl font-bold text-gray-900">
-                    Technical Interview Completed
+                <h1 className="mt-5 text-2xl font-extrabold text-slate-900">
+                    Technical Assessment Completed
                 </h1>
 
-                <p className="mt-3 text-gray-500">
-                    Congratulations! You have completed all available technical interview questions.
+                <p className="mt-2 text-sm text-slate-500">
+                    Great work! You have successfully submitted all questions across the interview rounds.
                 </p>
 
-                <div className="mt-6 rounded-xl border border-gray-100 bg-gray-50 p-5">
-                    <p className="text-sm font-semibold text-gray-800">
-                        All three technical rounds completed
+                <div className="mt-6 rounded-xl border border-slate-100 bg-slate-50/80 p-4">
+                    <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                        Rounds Evaluated
                     </p>
-
-                    <p className="mt-2 text-sm text-gray-500">
-                        DSA · Core CS · Coding
+                    <p className="mt-1 text-sm font-semibold text-slate-800">
+                        DSA · Core CS · Python Coding
                     </p>
                 </div>
 
-                <p className="mt-6 text-sm text-gray-600">
-                    Please wait for your interviewer for the next steps.
+                <p className="mt-6 text-xs text-slate-400">
+                    Your answers and code executions have been logged for automated evaluation and hiring panel review.
                 </p>
             </section>
         </main>
@@ -444,7 +456,7 @@ function AllRoundsCompletedScreen() {
 
 function StatusBadge({ status }: { status: string }) {
     return (
-        <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
+        <span className="inline-flex rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-bold text-indigo-700">
             {status}
         </span>
     );
@@ -452,15 +464,16 @@ function StatusBadge({ status }: { status: string }) {
 
 function DifficultyBadge({ difficulty }: { difficulty: string }) {
     const styles: Record<string, string> = {
-        Easy: "bg-green-100 text-green-700",
-        Medium: "bg-amber-100 text-amber-700",
-        Hard: "bg-red-100 text-red-700",
+        Easy: "bg-emerald-50 text-emerald-700 border-emerald-200",
+        Medium: "bg-amber-50 text-amber-700 border-amber-200",
+        Hard: "bg-rose-50 text-rose-700 border-rose-200",
     };
 
     return (
         <span
-            className={`rounded-full px-3 py-1 text-xs font-semibold ${styles[difficulty] ?? "bg-gray-100 text-gray-700"
-                }`}
+            className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${
+                styles[difficulty] ?? "bg-slate-100 text-slate-700 border-slate-200"
+            }`}
         >
             {difficulty}
         </span>
@@ -475,13 +488,13 @@ function MessageScreen({
     message: string;
 }) {
     return (
-        <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-            <div className="max-w-md rounded-xl border border-gray-200 bg-white p-8 text-center shadow-sm">
-                <h1 className="text-xl font-semibold text-gray-900">
+        <main className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
+            <div className="max-w-md rounded-2xl border border-slate-200/80 bg-white p-8 text-center shadow-xs">
+                <AlertCircle className="mx-auto h-10 w-10 text-amber-500" />
+                <h1 className="mt-4 text-lg font-bold text-slate-900">
                     {title}
                 </h1>
-
-                <p className="mt-3 text-sm text-gray-500">
+                <p className="mt-2 text-xs text-slate-500">
                     {message}
                 </p>
             </div>
@@ -492,8 +505,8 @@ function MessageScreen({
 function AccessDenied() {
     return (
         <MessageScreen
-            title="Invalid or expired interview link"
-            message="This interview link is invalid or has been replaced. Please contact your interviewer."
+            title="Invalid or Expired Link"
+            message="This interview token is invalid or has expired. Please verify your link with the recruitment coordinator."
         />
     );
 }
@@ -506,9 +519,9 @@ export default function CandidateInterviewPage({
     return (
         <Suspense
             fallback={
-                <main className="flex min-h-screen items-center justify-center bg-gray-50">
-                    <p className="text-sm text-gray-500">
-                        Loading interview...
+                <main className="flex min-h-screen items-center justify-center bg-slate-50">
+                    <p className="text-sm font-semibold text-slate-500">
+                        Loading assessment environment...
                     </p>
                 </main>
             }

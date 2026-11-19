@@ -1,9 +1,9 @@
-
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { updateCandidate, deleteCandidate } from "./actions";
+import { Search, Filter, X, Edit2, Trash2, GraduationCap, Mail, Tag, Calendar, UserCheck } from "lucide-react";
 
 type Candidate = {
     id: string;
@@ -101,27 +101,33 @@ export default function CandidateFilters({ candidates }: Props) {
     return (
         <div>
             {/* Search and Filters */}
-            <div className="mb-5 grid grid-cols-1 gap-3 md:grid-cols-[1fr_240px_auto]">
-                <input
-                    type="search"
-                    value={search}
-                    onChange={(event) => setSearch(event.target.value)}
-                    placeholder="Search name, email or application ID..."
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-primary"
-                />
+            <div className="mb-6 grid grid-cols-1 gap-3 md:grid-cols-[1fr_260px_auto]">
+                <div className="relative">
+                    <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    <input
+                        type="search"
+                        value={search}
+                        onChange={(event) => setSearch(event.target.value)}
+                        placeholder="Search by name, email or application ID..."
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50/50 pl-10 pr-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 outline-none transition focus:border-indigo-600 focus:bg-white focus:ring-3 focus:ring-indigo-100"
+                    />
+                </div>
 
-                <select
-                    value={college}
-                    onChange={(event) => setCollege(event.target.value)}
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-primary"
-                >
-                    <option value="">All colleges</option>
-                    {colleges.map((item) => (
-                        <option key={item} value={item}>
-                            {item}
-                        </option>
-                    ))}
-                </select>
+                <div className="relative">
+                    <select
+                        value={college}
+                        onChange={(event) => setCollege(event.target.value)}
+                        className="w-full appearance-none rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-800 outline-none transition focus:border-indigo-600 focus:bg-white focus:ring-3 focus:ring-indigo-100"
+                    >
+                        <option value="">All Institutions</option>
+                        {colleges.map((item) => (
+                            <option key={item} value={item}>
+                                {item}
+                            </option>
+                        ))}
+                    </select>
+                    <Filter className="pointer-events-none absolute right-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+                </div>
 
                 <button
                     type="button"
@@ -129,77 +135,88 @@ export default function CandidateFilters({ candidates }: Props) {
                         setSearch("");
                         setCollege("");
                     }}
-                    className="rounded-md border border-gray-300 px-4 py-2 text-sm hover:bg-gray-50"
+                    className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-50 hover:text-slate-900"
                 >
-                    Clear filters
+                    <X className="h-3.5 w-3.5 text-slate-400" />
+                    Reset
                 </button>
             </div>
 
-            {/* Feedback */}
+            {/* Feedback message */}
             {message && (
                 <div
                     role="status"
-                    className="mb-4 rounded-md bg-blue-50 p-3 text-sm text-blue-700"
+                    className="mb-4 rounded-xl border border-indigo-100 bg-indigo-50/80 p-3.5 text-sm font-medium text-indigo-800 shadow-xs"
                 >
                     {message}
                 </div>
             )}
 
             {/* Candidate Count */}
-            <div className="mb-3 text-sm text-gray-600">
-                Showing <strong>{filteredCandidates.length}</strong> of{" "}
-                <strong>{candidates.length}</strong> candidates
+            <div className="mb-4 flex items-center justify-between text-xs font-medium text-slate-500">
+                <span>
+                    Showing <strong className="text-slate-900">{filteredCandidates.length}</strong> of{" "}
+                    <strong className="text-slate-900">{candidates.length}</strong> registered candidates
+                </span>
             </div>
 
             {/* Candidate Table */}
             {filteredCandidates.length > 0 ? (
-                <div className="overflow-x-auto rounded border">
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-surface">
+                <div className="overflow-hidden rounded-xl border border-slate-200/80">
+                    <table className="min-w-full divide-y divide-slate-100 text-left text-sm">
+                        <thead className="bg-slate-50/75 text-xs font-bold uppercase tracking-wider text-slate-500">
                             <tr>
-                                {[
-                                    "Name",
-                                    "Email",
-                                    "Application ID",
-                                    "College",
-                                    "Registered",
-                                    "Actions",
-                                ].map((heading) => (
-                                    <th
-                                        key={heading}
-                                        className="px-4 py-3 text-left text-sm font-medium text-gray-700"
-                                    >
-                                        {heading}
-                                    </th>
-                                ))}
+                                <th className="px-5 py-3.5">Candidate</th>
+                                <th className="px-5 py-3.5">Application ID</th>
+                                <th className="px-5 py-3.5">Institution</th>
+                                <th className="px-5 py-3.5">Registered</th>
+                                <th className="px-5 py-3.5 text-right">Actions</th>
                             </tr>
                         </thead>
 
-                        <tbody className="divide-y divide-gray-100 bg-white">
+                        <tbody className="divide-y divide-slate-100 bg-white">
                             {filteredCandidates.map((candidate) => (
-                                <tr key={candidate.id} className="hover:bg-gray-50">
-                                    <td className="px-4 py-3 text-sm text-gray-800">
-                                        {candidate.name}
+                                <tr key={candidate.id} className="transition-colors hover:bg-slate-50/70">
+                                    <td className="px-5 py-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-50 font-bold text-xs text-indigo-700">
+                                                {candidate.name.slice(0, 2).toUpperCase()}
+                                            </div>
+                                            <div>
+                                                <p className="font-semibold text-slate-900">
+                                                    {candidate.name}
+                                                </p>
+                                                <p className="flex items-center gap-1 text-xs text-slate-400 mt-0.5">
+                                                    <Mail className="h-3 w-3" />
+                                                    {candidate.email}
+                                                </p>
+                                            </div>
+                                        </div>
                                     </td>
 
-                                    <td className="px-4 py-3 text-sm text-gray-800">
-                                        {candidate.email}
+                                    <td className="px-5 py-4">
+                                        <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-xs font-mono font-medium text-slate-700">
+                                            <Tag className="h-3 w-3 text-slate-400" />
+                                            {candidate.applicationId}
+                                        </span>
                                     </td>
 
-                                    <td className="px-4 py-3 text-sm text-gray-800">
-                                        {candidate.applicationId}
+                                    <td className="px-5 py-4 text-slate-600">
+                                        <div className="flex items-center gap-1.5 text-xs text-slate-700 font-medium">
+                                            <GraduationCap className="h-3.5 w-3.5 text-slate-400" />
+                                            {candidate.college}
+                                        </div>
                                     </td>
 
-                                    <td className="px-4 py-3 text-sm text-gray-800">
-                                        {candidate.college}
+                                    <td className="px-5 py-4 text-xs text-slate-500">
+                                        <div className="flex items-center gap-1.5">
+                                            <Calendar className="h-3.5 w-3.5 text-slate-400" />
+                                            {candidate.registered}
+                                        </div>
                                     </td>
 
-                                    <td className="px-4 py-3 text-sm text-gray-800">
-                                        {candidate.registered}
-                                    </td>
-
-                                    <td className="px-4 py-3">
-                                        <div className="flex gap-3">
+                                    <td className="px-5 py-4 text-right">
+                                        <div className="flex items-center justify-end gap-2">
                                             <button
                                                 type="button"
                                                 disabled={isPending}
@@ -211,8 +228,9 @@ export default function CandidateFilters({ candidates }: Props) {
                                                             : candidate.id
                                                     );
                                                 }}
-                                                className="text-sm font-medium text-blue-600 hover:text-blue-800 disabled:opacity-50"
+                                                className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-50 hover:border-slate-300 disabled:opacity-50"
                                             >
+                                                <Edit2 className="h-3 w-3 text-slate-400" />
                                                 {editingId === candidate.id ? "Close" : "Edit"}
                                             </button>
 
@@ -222,8 +240,9 @@ export default function CandidateFilters({ candidates }: Props) {
                                                 onClick={() =>
                                                     handleDelete(candidate.id, candidate.name)
                                                 }
-                                                className="text-sm font-medium text-red-600 hover:text-red-800 disabled:opacity-50"
+                                                className="inline-flex items-center gap-1 rounded-lg border border-rose-200 bg-rose-50/40 px-2.5 py-1 text-xs font-medium text-rose-600 transition hover:bg-rose-100/70 disabled:opacity-50"
                                             >
+                                                <Trash2 className="h-3 w-3" />
                                                 Delete
                                             </button>
                                         </div>
@@ -234,19 +253,19 @@ export default function CandidateFilters({ candidates }: Props) {
                     </table>
                 </div>
             ) : (
-                <div className="rounded-lg border border-dashed p-8 text-center">
-                    <p className="font-medium text-gray-700">
-                        No matching candidates found.
+                <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 p-12 text-center">
+                    <p className="font-semibold text-slate-700">
+                        No matching candidates found
                     </p>
-                    <p className="mt-1 text-sm text-gray-500">
-                        Try changing your search or clearing the filters.
+                    <p className="mt-1 text-xs text-slate-400">
+                        Try adjusting your search criteria or clear your active filters.
                     </p>
                 </div>
             )}
 
-            {/* Edit Candidate Form */}
+            {/* Edit Candidate Modal / Drawer */}
             {editingId && (
-                <div className="mt-6 rounded-lg border border-gray-200 bg-gray-50 p-5">
+                <div className="mt-6 rounded-2xl border border-indigo-100 bg-slate-50/80 p-6 shadow-xs">
                     {(() => {
                         const candidate = candidates.find(
                             (item) => item.id === editingId
@@ -256,9 +275,18 @@ export default function CandidateFilters({ candidates }: Props) {
 
                         return (
                             <>
-                                <h3 className="mb-4 text-lg font-semibold text-gray-800">
-                                    Edit Candidate
-                                </h3>
+                                <div className="mb-4 flex items-center justify-between border-b border-slate-200/60 pb-3">
+                                    <h3 className="text-sm font-bold text-slate-900">
+                                        Edit Candidate: {candidate.name}
+                                    </h3>
+                                    <button
+                                        type="button"
+                                        onClick={() => setEditingId(null)}
+                                        className="text-slate-400 hover:text-slate-600"
+                                    >
+                                        <X className="h-4 w-4" />
+                                    </button>
+                                </div>
 
                                 <form
                                     action={(formData) =>
@@ -269,7 +297,7 @@ export default function CandidateFilters({ candidates }: Props) {
                                     <div>
                                         <label
                                             htmlFor="edit-name"
-                                            className="mb-1 block text-sm font-medium"
+                                            className="mb-1 block text-xs font-bold uppercase tracking-wider text-slate-600"
                                         >
                                             Full Name *
                                         </label>
@@ -280,14 +308,14 @@ export default function CandidateFilters({ candidates }: Props) {
                                             required
                                             maxLength={100}
                                             defaultValue={candidate.name}
-                                            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2"
+                                            className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm text-slate-900 outline-none transition focus:border-indigo-600 focus:ring-3 focus:ring-indigo-100"
                                         />
                                     </div>
 
                                     <div>
                                         <label
                                             htmlFor="edit-email"
-                                            className="mb-1 block text-sm font-medium"
+                                            className="mb-1 block text-xs font-bold uppercase tracking-wider text-slate-600"
                                         >
                                             Email Address *
                                         </label>
@@ -299,14 +327,14 @@ export default function CandidateFilters({ candidates }: Props) {
                                             required
                                             maxLength={254}
                                             defaultValue={candidate.email}
-                                            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2"
+                                            className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm text-slate-900 outline-none transition focus:border-indigo-600 focus:ring-3 focus:ring-indigo-100"
                                         />
                                     </div>
 
                                     <div>
                                         <label
                                             htmlFor="edit-applicationId"
-                                            className="mb-1 block text-sm font-medium"
+                                            className="mb-1 block text-xs font-bold uppercase tracking-wider text-slate-600"
                                         >
                                             Application ID
                                         </label>
@@ -320,16 +348,16 @@ export default function CandidateFilters({ candidates }: Props) {
                                                     ? ""
                                                     : candidate.applicationId
                                             }
-                                            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2"
+                                            className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm text-slate-900 outline-none transition focus:border-indigo-600 focus:ring-3 focus:ring-indigo-100"
                                         />
                                     </div>
 
                                     <div>
                                         <label
                                             htmlFor="edit-college"
-                                            className="mb-1 block text-sm font-medium"
+                                            className="mb-1 block text-xs font-bold uppercase tracking-wider text-slate-600"
                                         >
-                                            College
+                                            College / Institution
                                         </label>
 
                                         <input
@@ -341,26 +369,26 @@ export default function CandidateFilters({ candidates }: Props) {
                                                     ? ""
                                                     : candidate.college
                                             }
-                                            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2"
+                                            className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm text-slate-900 outline-none transition focus:border-indigo-600 focus:ring-3 focus:ring-indigo-100"
                                         />
                                     </div>
 
-                                    <div className="flex gap-3 md:col-span-2">
-                                        <button
-                                            type="submit"
-                                            disabled={isPending}
-                                            className="rounded-md bg-primary px-5 py-2 text-white hover:opacity-90 disabled:opacity-50"
-                                        >
-                                            {isPending ? "Saving..." : "Save Changes"}
-                                        </button>
-
+                                    <div className="flex gap-2.5 pt-2 md:col-span-2 justify-end">
                                         <button
                                             type="button"
                                             disabled={isPending}
                                             onClick={() => setEditingId(null)}
-                                            className="rounded-md border border-gray-300 px-5 py-2 hover:bg-gray-100"
+                                            className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
                                         >
                                             Cancel
+                                        </button>
+
+                                        <button
+                                            type="submit"
+                                            disabled={isPending}
+                                            className="rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white shadow-xs hover:bg-indigo-700 disabled:opacity-50"
+                                        >
+                                            {isPending ? "Saving changes..." : "Save Changes"}
                                         </button>
                                     </div>
                                 </form>
@@ -368,12 +396,6 @@ export default function CandidateFilters({ candidates }: Props) {
                         );
                     })()}
                 </div>
-            )}
-
-            {isPending && (
-                <p className="mt-3 text-sm text-gray-500" aria-live="polite">
-                    Processing your request...
-                </p>
             )}
         </div>
     );

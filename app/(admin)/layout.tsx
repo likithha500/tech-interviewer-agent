@@ -27,15 +27,15 @@ export default async function AdminLayout({
     }
 
     return (
-        <div className="flex min-h-screen w-full bg-gray-50 text-gray-800">
-            <aside className="w-64 shrink-0">
+        <div className="flex min-h-screen w-full bg-slate-50/50 text-slate-800">
+            <aside className="sticky top-0 h-screen shrink-0 z-40">
                 <Sidebar />
             </aside>
 
             <div className="flex min-w-0 flex-1 flex-col">
                 <Header />
 
-                <main className="min-h-0 flex-1 overflow-auto p-6">
+                <main className="min-h-0 flex-1 overflow-auto p-6 md:p-8">
                     {children}
                 </main>
             </div>
