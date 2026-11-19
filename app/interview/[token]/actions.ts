@@ -11,10 +11,7 @@ import {
 
 const ALLOWED_CATEGORIES = [
     "DSA",
-    "DBMS",
-    "OS",
-    "Networks",
-    "OOP",
+    "Core CS",
     "Coding",
 ] as const;
 

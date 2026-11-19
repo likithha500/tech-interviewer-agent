@@ -96,6 +96,8 @@ function runDocker(
         const args = [
             "run",
             "--rm",
+            "--name",
+            containerName,
             "--interactive",
             "--network",
             "none",
