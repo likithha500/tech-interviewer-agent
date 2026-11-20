@@ -2,6 +2,26 @@
  * tests/ats-integration.test.ts
  */
 
+// Load .env.local for Supabase testing
+import * as fs from "node:fs";
+import * as path from "node:path";
+
+try {
+  const envPath = path.resolve(__dirname, "../.env.local");
+  if (fs.existsSync(envPath)) {
+    const envContent = fs.readFileSync(envPath, "utf-8");
+    for (const line of envContent.split("\n")) {
+      const trimmed = line.trim();
+      if (trimmed && !trimmed.startsWith("#") && trimmed.includes("=")) {
+        const [k, ...v] = trimmed.split("=");
+        process.env[k.trim()] = v.join("=").trim();
+      }
+    }
+  }
+} catch (e) {
+  // Ignore env loading errors
+}
+
 // Mock server-only before importing providers in test environment
 import Module from "node:module";
 const originalRequire = Module.prototype.require;
@@ -12,6 +32,7 @@ Module.prototype.require = function (id: string) {
 
 import { GreenhouseProvider } from "../lib/ats/greenhouse";
 import { LeverProvider } from "../lib/ats/lever";
+import { DemoATSProvider } from "../lib/ats/demo";
 import { ATSSyncPayload } from "../lib/ats/types";
 
 // Mock fetch globally
@@ -236,6 +257,63 @@ async function runTestSuite() {
     assert(results.length === 1, "Must return 1 match");
     assert(results[0].name === "Jane Smith", "Name must match");
     assert(results[0].externalApplicationId === "opp-123", "Opp ID must match");
+  });
+
+  global.fetch = originalFetch;
+
+  // 11. Demo ATS provider configuration & status
+  await runTest("11. Demo ATS configuration status check", async () => {
+    const provider = new DemoATSProvider();
+    const status = provider.isConfigured();
+    assert(status.configured === true, "Demo ATS must always report configured");
+    assert(status.provider === "demo", "Provider type must be 'demo'");
+    assert(Boolean(status.message && status.message.includes("Demo Mode")), "Message must indicate Demo Mode");
+  });
+
+    // 12. Demo ATS scorecard push and idempotency / deduplication
+  await runTest("12. Demo ATS scorecard push and deduplication", async () => {
+    // Mock Supabase admin call for demo_ats_records upsert
+    let storedRecord: any = null;
+    global.fetch = async (input, init) => {
+      const urlStr = String(input);
+      if (urlStr.includes('/rest/v1/demo_ats_records')) {
+        const payload = JSON.parse(init?.body as string);
+        if (!storedRecord) {
+          storedRecord = { id: 7001, ...payload };
+        } else {
+          storedRecord = { ...storedRecord, ...payload };
+        }
+        return new Response(JSON.stringify(storedRecord), {
+          status: 201,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+      return originalFetch(input, init);
+    };
+
+    const provider = new DemoATSProvider();
+    const payload = makeMockPayload({
+      candidateId: "demo-cand-uuid-1",
+      candidateName: "Alice Wonder",
+      candidateEmail: "alice@example.com",
+      interviewId: "demo-int-uuid-100",
+      overallScore: 92,
+      aiRecommendation: "Hire",
+      humanDecision: "Hire",
+    });
+
+    const res1 = await provider.pushScorecard(payload);
+    assert(res1.success === true, "First push must succeed");
+    assert(res1.externalRecordReference?.startsWith("demo_ats_") ?? false, "Record reference must start with demo_ats_");
+
+    // Second push for same interview (deduplication / update check)
+    const res2 = await provider.pushScorecard({
+      ...payload,
+      overallScore: 95,
+      humanDecision: "Hire",
+    });
+    assert(res2.success === true, "Second push must succeed");
+    assert(res2.externalRecordReference === res1.externalRecordReference, "Should update the same demo record ID");
   });
 
   console.log(`\nTest results: ${passedTests} / ${totalTests} passed.`);

@@ -12,6 +12,7 @@ import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { GreenhouseProvider } from "./greenhouse";
 import { LeverProvider } from "./lever";
+import { DemoATSProvider } from "./demo";
 import {
   ATSProvider,
   ATSProviderType,
@@ -23,6 +24,7 @@ import {
 
 export class ATSService {
   private static providers: Record<ATSProviderType, ATSProvider> = {
+    demo: new DemoATSProvider(),
     greenhouse: new GreenhouseProvider(),
     lever: new LeverProvider(),
   };
@@ -37,6 +39,7 @@ export class ATSService {
 
   static getStatus(): Record<ATSProviderType, ATSConfigStatus> {
     return {
+      demo: this.providers.demo.isConfigured(),
       greenhouse: this.providers.greenhouse.isConfigured(),
       lever: this.providers.lever.isConfigured(),
     };
@@ -170,7 +173,7 @@ export class ATSService {
    * 1. Interview must be "Completed".
    * 2. Report must exist with overall_score and ai recommendation.
    * 3. Final human decision (Hire, Hold, Reject) must be submitted.
-   * 4. External candidate mapping must exist.
+   * 4. External candidate mapping must exist (auto-linked with default demo ID if demo provider).
    */
   static async syncInterviewReport(
     interviewId: string,
@@ -238,14 +241,23 @@ export class ATSService {
     }
 
     // 3. Fetch candidate external mapping
-    const { data: mapping, error: mapErr } = await admin
+    let { data: mapping, error: mapErr } = await admin
       .from("ats_candidate_mappings")
       .select("external_candidate_id, external_application_id")
       .eq("candidate_id", candidateRaw.id)
       .eq("provider", providerType)
       .maybeSingle();
 
-    if (mapErr || !mapping || !mapping.external_candidate_id) {
+    // For Demo ATS: if no mapping exists yet, automatically create a standard demo mapping
+    if ((!mapping || !mapping.external_candidate_id) && providerType === "demo") {
+      const autoDemoCandId = `demo-cand-${candidateRaw.id.slice(0, 8)}`;
+      const autoDemoAppId = `demo-app-${candidateRaw.id.slice(0, 8)}`;
+      await this.linkCandidate(candidateRaw.id, "demo", autoDemoCandId, autoDemoAppId);
+      mapping = {
+        external_candidate_id: autoDemoCandId,
+        external_application_id: autoDemoAppId,
+      };
+    } else if (mapErr || !mapping || !mapping.external_candidate_id) {
       return {
         success: false,
         errorMessage: `Candidate is not linked to any external ${providerType} record. Link the candidate first.`,

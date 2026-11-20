@@ -3,7 +3,7 @@
  * Shared data structures and contracts for ATS (Applicant Tracking System) providers.
  */
 
-export type ATSProviderType = "greenhouse" | "lever";
+export type ATSProviderType = "greenhouse" | "lever" | "demo";
 
 export type ATSConfigStatus = {
   configured: boolean;
@@ -16,7 +16,7 @@ export type ATSCandidateSearchResult = {
   externalCandidateId: string;
   name: string;
   email: string;
-  externalApplicationId?: string; // Application ID in Greenhouse, Opportunity ID in Lever
+  externalApplicationId?: string; // Application ID in Greenhouse, Opportunity ID in Lever, or Demo Job App ID
   jobTitle?: string;
   profileUrl?: string;
 };

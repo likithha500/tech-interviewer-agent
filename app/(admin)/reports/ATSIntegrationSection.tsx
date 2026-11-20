@@ -26,6 +26,8 @@ import {
   RotateCcw,
   ShieldCheck,
   Loader2,
+  Sparkles,
+  Layers,
 } from "lucide-react";
 
 type MappingRow = {
@@ -72,7 +74,7 @@ export default function ATSIntegrationSection({
   initialSyncLogs,
 }: Props) {
   const router = useRouter();
-  const [selectedProvider, setSelectedProvider] = useState<ATSProviderType>("greenhouse");
+  const [selectedProvider, setSelectedProvider] = useState<ATSProviderType>("demo");
   const [isPending, startTransition] = useTransition();
 
   // Search state
@@ -95,13 +97,16 @@ export default function ATSIntegrationSection({
   const currentMapping = initialMappings.find((m) => m.provider === selectedProvider);
   const currentLog = initialSyncLogs.find((l) => l.provider === selectedProvider);
 
+  // In demo mode, mapping can be auto-generated if absent
+  const hasMappingOrDemo = Boolean(currentMapping || selectedProvider === "demo");
+
   const canSync =
     interviewStatus === "Completed" &&
     hasEvaluatedReport &&
     Boolean(
       humanReviewDecision && ["Hire", "Hold", "Reject"].includes(humanReviewDecision)
     ) &&
-    Boolean(currentMapping);
+    hasMappingOrDemo;
 
   // Search handler
   function handleSearch(e: React.FormEvent) {
@@ -167,12 +172,18 @@ export default function ATSIntegrationSection({
 
   // Push Report handler
   function handlePushReport() {
-    const providerName = selectedProvider === "greenhouse" ? "Greenhouse Harvest" : "Lever v1";
+    const providerLabel =
+      selectedProvider === "demo"
+        ? "Demo ATS (Simulated)"
+        : selectedProvider === "greenhouse"
+        ? "Greenhouse Harvest"
+        : "Lever v1";
+
     const confirmed = window.confirm(
-      `Confirm sending finalized interview scorecard to ${providerName}?\n\n` +
+      `Confirm sending finalized interview scorecard to ${providerLabel}?\n\n` +
         `Candidate: ${candidateName}\n` +
         `Human Decision: ${humanReviewDecision}\n` +
-        `Target External ID: ${currentMapping?.externalCandidateId}`
+        `Target External ID: ${currentMapping?.externalCandidateId || `demo-cand-${candidateId.slice(0, 8)}`}`
     );
 
     if (!confirmed) return;
@@ -183,7 +194,7 @@ export default function ATSIntegrationSection({
       if (result.success) {
         setSyncStatusMsg({
           type: "success",
-          text: `Report successfully pushed to ${providerName}! Reference: ${result.externalRecordReference || "created"}`,
+          text: `Report successfully pushed to ${providerLabel}! Reference: ${result.externalRecordReference || "created"}`,
         });
       } else {
         setSyncStatusMsg({
@@ -208,13 +219,29 @@ export default function ATSIntegrationSection({
               ATS Synchronization
             </h3>
             <p className="text-xs text-slate-400">
-              Deliver interview scorecards and notes to Greenhouse Recruiting or Lever
+              Deliver interview scorecards and notes to Demo ATS, Greenhouse, or Lever
             </p>
           </div>
         </div>
 
         {/* Provider Toggle Tabs */}
         <div className="inline-flex rounded-xl bg-slate-100 p-1 border border-slate-200/60">
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedProvider("demo");
+              setSearchResults([]);
+              setHasSearched(false);
+              setSyncStatusMsg(null);
+            }}
+            className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+              selectedProvider === "demo"
+                ? "bg-white text-indigo-700 shadow-2xs"
+                : "text-slate-500 hover:text-slate-900"
+            }`}
+          >
+            Demo ATS
+          </button>
           <button
             type="button"
             onClick={() => {
@@ -259,18 +286,26 @@ export default function ATSIntegrationSection({
             }`}
           />
           <span className="font-bold text-slate-700 capitalize">
-            {selectedProvider} Status:
+            {selectedProvider === "demo" ? "Demo ATS" : selectedProvider} Status:
           </span>
           <span className={currentConfig.configured ? "text-slate-600" : "text-amber-700 font-medium"}>
-            {currentConfig.configured ? "Configured & Ready" : currentConfig.message}
+            {selectedProvider === "demo"
+              ? "Demo Mode — No External ATS Connected"
+              : currentConfig.configured
+              ? "Configured & Ready"
+              : currentConfig.message}
           </span>
         </div>
 
-        {!currentConfig.configured && (
+        {selectedProvider === "demo" ? (
+          <span className="rounded-md bg-indigo-50 px-2 py-0.5 text-[11px] font-semibold text-indigo-700 border border-indigo-200">
+            Simulated Sandbox
+          </span>
+        ) : !currentConfig.configured ? (
           <span className="rounded-md bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-700 border border-amber-200">
             Credentials Pending
           </span>
-        )}
+        ) : null}
       </div>
 
       {/* Status Feedback banner */}
@@ -297,7 +332,7 @@ export default function ATSIntegrationSection({
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-indigo-900 flex items-center gap-1.5">
               <Link2 className="h-3.5 w-3.5 text-indigo-600" />
-              Linked {selectedProvider.toUpperCase()} Record
+              Linked {selectedProvider === "demo" ? "Demo ATS" : selectedProvider.toUpperCase()} Record
             </span>
 
             <button
@@ -321,7 +356,7 @@ export default function ATSIntegrationSection({
             {currentMapping.externalApplicationId && (
               <div>
                 <p className="text-slate-400 font-medium">
-                  {selectedProvider === "greenhouse" ? "Application ID" : "Opportunity ID"}
+                  {selectedProvider === "greenhouse" ? "Application ID" : selectedProvider === "lever" ? "Opportunity ID" : "Demo App ID"}
                 </p>
                 <p className="font-mono font-bold text-slate-800 mt-0.5">
                   {currentMapping.externalApplicationId}
@@ -333,15 +368,17 @@ export default function ATSIntegrationSection({
           <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
             <a
               href={
-                selectedProvider === "greenhouse"
+                selectedProvider === "demo"
+                  ? `/admin/demo-ats`
+                  : selectedProvider === "greenhouse"
                   ? `https://app.greenhouse.io/people/${currentMapping.externalCandidateId}`
                   : `https://hire.lever.co/candidates/${currentMapping.externalApplicationId || currentMapping.externalCandidateId}`
               }
-              target="_blank"
+              target={selectedProvider === "demo" ? "_self" : "_blank"}
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-800 hover:underline"
             >
-              <span>Open in {selectedProvider === "greenhouse" ? "Greenhouse" : "Lever"}</span>
+              <span>Open in {selectedProvider === "demo" ? "Demo ATS Dashboard" : selectedProvider === "greenhouse" ? "Greenhouse" : "Lever"}</span>
               <ExternalLink className="h-3 w-3" />
             </a>
 
@@ -350,8 +387,30 @@ export default function ATSIntegrationSection({
             </span>
           </div>
         </div>
+      ) : selectedProvider === "demo" ? (
+        /* Demo Mode: Quick Auto-Link option */
+        <div className="rounded-xl border border-indigo-100 bg-indigo-50/30 p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-900">
+                Demo ATS Mapping
+              </h4>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Ready to simulate syncing without external accounts. A demo identifier (`demo-cand-{candidateId.slice(0, 8)}`) will be assigned automatically upon pushing, or you can link custom demo records below.
+              </p>
+            </div>
+            <button
+              type="button"
+              disabled={isPending}
+              onClick={() => handleLink(`demo-cand-${candidateId.slice(0, 8)}`, `demo-app-${candidateId.slice(0, 8)}`)}
+              className="rounded-lg bg-indigo-600 text-white px-3 py-1.5 text-xs font-semibold hover:bg-indigo-700 disabled:opacity-50"
+            >
+              Assign Demo Record
+            </button>
+          </div>
+        </div>
       ) : (
-        /* Lookup / Link Candidate */
+        /* Lookup / Link Candidate for Greenhouse & Lever */
         <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-4 space-y-4">
           <div>
             <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700">
@@ -477,10 +536,12 @@ export default function ATSIntegrationSection({
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700">
-              Synchronize Interview Result
+              {selectedProvider === "demo" ? "Simulate ATS Sync (Demo Mode)" : "Synchronize Interview Result"}
             </h4>
             <p className="text-xs text-slate-400 mt-0.5">
-              Sends overall score, skill breakdown, insights, AI suggestion &amp; human decision.
+              {selectedProvider === "demo"
+                ? "Stores the candidate scorecard in the Demo ATS Supabase database for inspection."
+                : "Sends overall score, skill breakdown, insights, AI suggestion & human decision."}
             </p>
           </div>
 
@@ -495,7 +556,11 @@ export default function ATSIntegrationSection({
             ) : (
               <Send className="h-3.5 w-3.5" />
             )}
-            <span>Push Report to {selectedProvider === "greenhouse" ? "Greenhouse" : "Lever"}</span>
+            <span>
+              {selectedProvider === "demo"
+                ? "Simulate Push to Demo ATS"
+                : `Push Report to ${selectedProvider === "greenhouse" ? "Greenhouse" : "Lever"}`}
+            </span>
           </button>
         </div>
 
@@ -512,9 +577,11 @@ export default function ATSIntegrationSection({
             <p className={humanReviewDecision ? "text-emerald-700" : "text-amber-700"}>
               • Final human decision submitted: {humanReviewDecision ? `Yes (${humanReviewDecision})` : "No (Pending human review)"}
             </p>
-            <p className={currentMapping ? "text-emerald-700" : "text-amber-700"}>
-              • Linked to external {selectedProvider} candidate: {currentMapping ? "Yes" : "No (Link candidate above)"}
-            </p>
+            {selectedProvider !== "demo" && (
+              <p className={currentMapping ? "text-emerald-700" : "text-amber-700"}>
+                • Linked to external {selectedProvider} candidate: {currentMapping ? "Yes" : "No (Link candidate above)"}
+              </p>
+            )}
           </div>
         )}
 
@@ -522,7 +589,9 @@ export default function ATSIntegrationSection({
         {currentLog && (
           <div className="pt-2 border-t border-slate-200/60 text-xs">
             <div className="flex items-center justify-between">
-              <span className="font-semibold text-slate-700">Last Sync Attempt:</span>
+              <span className="font-semibold text-slate-700">
+                Last Sync Attempt ({selectedProvider === "demo" ? "Simulated" : "Live"}):
+              </span>
               <span
                 className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold border ${
                   currentLog.status === "success"
@@ -550,6 +619,15 @@ export default function ATSIntegrationSection({
                 <span className="font-mono text-indigo-600">
                   Ref: {currentLog.externalRecordReference}
                 </span>
+              )}
+              {selectedProvider === "demo" && (
+                <a
+                  href="/admin/demo-ats"
+                  className="font-semibold text-indigo-600 hover:underline flex items-center gap-1"
+                >
+                  <span>View in Demo ATS Dashboard</span>
+                  <ExternalLink className="h-2.5 w-2.5" />
+                </a>
               )}
             </div>
 

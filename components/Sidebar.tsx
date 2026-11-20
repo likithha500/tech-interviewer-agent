@@ -9,6 +9,7 @@ import {
   BookOpen,
   BarChart3,
   Bot,
+  Layers,
 } from "lucide-react";
 
 export default function Sidebar() {
@@ -20,6 +21,7 @@ export default function Sidebar() {
     { href: "/interviews", label: "Interviews", icon: Briefcase },
     { href: "/questions", label: "Question Bank", icon: BookOpen },
     { href: "/reports", label: "Reports & Review", icon: BarChart3 },
+    { href: "/demo-ats", label: "Demo ATS", icon: Layers },
   ];
 
   return (
