@@ -214,10 +214,12 @@ export default async function CandidateReportDetailPage({
           <div>
             <p className="text-slate-400 font-medium">Interview Date</p>
             <p className="font-semibold text-slate-800 mt-1">
-              {new Date(interview.created_at).toLocaleDateString("en-IN", {
-                dateStyle: "medium",
+              {new Intl.DateTimeFormat("en-GB", {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
                 timeZone: "Asia/Kolkata",
-              })}
+              }).format(new Date(interview.created_at))}
             </p>
           </div>
           <div>

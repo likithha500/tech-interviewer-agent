@@ -261,11 +261,14 @@ export class GreenhouseProvider implements ATSProvider {
   }
 
   private formatInterviewNote(p: ATSSyncPayload): string {
-    const dateFormatted = new Date(p.interviewCompletedAt).toLocaleString("en-US", {
+    const dateFormatted = new Intl.DateTimeFormat("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
       timeZone: "UTC",
-      dateStyle: "medium",
-      timeStyle: "short",
-    });
+    }).format(new Date(p.interviewCompletedAt));
 
     const skillLines = p.skills
       .map((s) => {

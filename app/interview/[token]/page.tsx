@@ -192,13 +192,14 @@ function WelcomeScreen({
 
                         <span className="text-right text-xs font-semibold text-slate-800">
                             {interview.scheduled_at
-                                ? new Date(
-                                    interview.scheduled_at
-                                ).toLocaleString("en-IN", {
-                                    dateStyle: "medium",
-                                    timeStyle: "short",
-                                    timeZone: "Asia/Kolkata",
-                                })
+                                ? new Intl.DateTimeFormat("en-GB", {
+                                      day: "2-digit",
+                                      month: "short",
+                                      year: "numeric",
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                      timeZone: "Asia/Kolkata",
+                                  }).format(new Date(interview.scheduled_at))
                                 : "To be announced"}
                         </span>
                     </div>

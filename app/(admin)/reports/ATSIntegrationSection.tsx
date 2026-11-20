@@ -383,7 +383,7 @@ export default function ATSIntegrationSection({
             </a>
 
             <span className="text-[11px] text-slate-400">
-              Linked on {new Date(currentMapping.updatedAt).toLocaleDateString()}
+              Linked on {new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short", year: "numeric", timeZone: "UTC" }).format(new Date(currentMapping.updatedAt))}
             </span>
           </div>
         </div>
@@ -611,7 +611,7 @@ export default function ATSIntegrationSection({
             <div className="mt-1 flex flex-wrap gap-x-4 text-[11px] text-slate-500">
               {currentLog.lastAttemptedAt && (
                 <span>
-                  Timestamp: {new Date(currentLog.lastAttemptedAt).toLocaleString()}
+                  Timestamp: {new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", timeZone: "UTC" }).format(new Date(currentLog.lastAttemptedAt))}
                 </span>
               )}
               <span>Attempts: {currentLog.attemptCount}</span>

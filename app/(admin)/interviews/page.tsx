@@ -256,14 +256,14 @@ async function InterviewsList() {
                       {interview.scheduled_at ? (
                         <div className="flex items-center gap-1.5">
                           <Clock className="h-3.5 w-3.5 text-slate-400" />
-                          {new Date(interview.scheduled_at).toLocaleString(
-                            "en-IN",
-                            {
-                              dateStyle: "medium",
-                              timeStyle: "short",
+                          {new Intl.DateTimeFormat("en-GB", {
+                              day: "2-digit",
+                              month: "short",
+                              year: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
                               timeZone: "Asia/Kolkata",
-                            }
-                          )}
+                            }).format(new Date(interview.scheduled_at))}
                         </div>
                       ) : (
                         <span className="text-slate-400">Not specified</span>

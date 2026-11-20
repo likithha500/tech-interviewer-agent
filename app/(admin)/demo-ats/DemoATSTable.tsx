@@ -151,7 +151,7 @@ export default function DemoATSTable({ records }: { records: DemoATSRecord[] }) 
                   <td className="px-6 py-4 text-xs text-slate-500 whitespace-nowrap">
                     <div className="flex items-center gap-1.5">
                       <Clock className="h-3.5 w-3.5 text-slate-400" />
-                      <span>{new Date(item.received_at).toLocaleString()}</span>
+                      <span>{new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", timeZone: "UTC" }).format(new Date(item.received_at))}</span>
                     </div>
                   </td>
 
@@ -290,7 +290,7 @@ export default function DemoATSTable({ records }: { records: DemoATSRecord[] }) 
             {/* Audit Details */}
             <div className="border-t border-slate-100 pt-3 text-[11px] text-slate-400 flex flex-wrap justify-between gap-2">
               <span>Demo Record ID: <strong className="font-mono text-slate-600">{selectedRecord.id}</strong></span>
-              <span>Received: {new Date(selectedRecord.received_at).toUTCString()}</span>
+              <span>Received: {new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", timeZone: "UTC" }).format(new Date(selectedRecord.received_at))}</span>
             </div>
 
             {/* Modal Actions */}
