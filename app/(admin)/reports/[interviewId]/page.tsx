@@ -22,6 +22,8 @@ import {
 import { EvaluateButton } from "../EvaluateButton";
 import { SkillBreakdown } from "../SkillBreakdown";
 import { HumanReviewButtons } from "../HumanReviewButtons";
+import ATSIntegrationSection from "../ATSIntegrationSection";
+import { ATSService } from "@/lib/ats/service";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -85,7 +87,8 @@ export default async function CandidateReportDetailPage({
       status,
       created_at,
       scheduled_at,
-      candidates ( name, email, college, application_id ),
+      candidate_id,
+      candidates ( id, name, email, college, application_id ),
       reports (
         overall_score,
         recommendation,
@@ -111,6 +114,7 @@ export default async function CandidateReportDetailPage({
     : interview.reports;
 
   const candidate = candidateRaw as {
+    id: string;
     name: string;
     email: string;
     college?: string | null;
@@ -134,6 +138,12 @@ export default async function CandidateReportDetailPage({
   }));
 
   const hasScore = report?.overall_score != null;
+
+  // 3. ATS Integration data
+  const candidateId = candidate?.id || interview.candidate_id;
+  const atsConfig = ATSService.getStatus();
+  const initialMappings = candidateId ? await ATSService.getCandidateMappings(candidateId) : [];
+  const initialSyncLogs = await ATSService.getInterviewSyncLogs(interviewId);
 
   return (
     <div className="space-y-8 max-w-6xl mx-auto pb-12">
@@ -519,6 +529,22 @@ export default async function CandidateReportDetailPage({
             </div>
           </div>
         </div>
+      )}
+
+      {/* ATS Integration Section */}
+      {candidateId && (
+        <ATSIntegrationSection
+          interviewId={interviewId}
+          candidateId={candidateId}
+          candidateName={candidate?.name || "Unknown Candidate"}
+          candidateEmail={candidate?.email || ""}
+          interviewStatus={interview.status}
+          hasEvaluatedReport={hasScore}
+          humanReviewDecision={report?.human_review_status ?? null}
+          atsConfig={atsConfig}
+          initialMappings={initialMappings}
+          initialSyncLogs={initialSyncLogs}
+        />
       )}
     </div>
   );
