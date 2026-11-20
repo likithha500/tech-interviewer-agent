@@ -1,266 +1,274 @@
 
 # Tech Interviewer Agent
 
-### AI-Powered Technical Assessment and Interview Evaluation Platform
+### AI-Powered Technical Interview & Recruitment Assessment Platform
 
-Tech Interviewer Agent is a full-stack, AI-assisted technical interview platform designed to evaluate candidates applying for fresher Software Development Engineer (SDE) roles.
+Tech Interviewer Agent is a full-stack, AI-assisted technical assessment platform designed for entry-level Software Development Engineer (SDE) recruitment.
 
-The platform combines structured technical assessments, automated code execution, AI-powered rubric evaluation, skill-wise scorecards, and human hiring decisions.
+It brings together structured technical interviews, coding assessments, AI-powered answer evaluation, evidence-based scorecards, human hiring decisions, and Applicant Tracking System (ATS) reporting.
 
-It supports DSA, DBMS, Operating Systems, Computer Networks, Object-Oriented Programming, and practical coding assessments.
-
-The goal is to make technical interviews more consistent, evidence-based, efficient, and fair while ensuring that final hiring decisions remain with human interviewers.
+The goal is to reduce repetitive evaluation work, support consistent technical assessments, and help interviewers make informed hiring decisions while keeping humans in control.
 
 ---
 
-## 1. Key Features
+## Key Features
 
-### Candidate Management
-- Candidate profile creation and management.
-- Interview assignment and tracking.
-- Candidate interview status monitoring.
-- Supabase-backed candidate records.
+### 1. Authentication & Admin Dashboard
+- Supabase-based user authentication.
+- Admin dashboard for managing the recruitment workflow.
+- Candidate management and interview progress tracking.
+- Centralized access to reports and evaluation results.
 
-### Technical Assessment
-- DSA questions across different difficulty levels.
-- DBMS and Core Computer Science questions.
-- Coding challenges with predefined test cases.
-- Structured interview workflow.
-- Question bank management.
+### 2. Candidate Management
+- Manage candidate profiles and application information.
+- Create and track candidate interviews.
+- Store candidate and interview records in Supabase PostgreSQL.
+- Access completed interview reports.
 
-### Multi-Language Code Execution
-Supports four programming languages:
+### 3. Question Bank
+- Technical questions covering:
+  - Data Structures and Algorithms (DSA)
+  - Database Management Systems (DBMS)
+  - Operating Systems
+  - Computer Networks
+  - Object-Oriented Programming
+- Questions organized by technical topic and difficulty.
+- Supports a structured approach to technical assessment.
+- Common question sets and evaluation rubrics are intended to improve consistency across candidates applying for the same role.
 
-- Python
-- JavaScript
-- Java
-- C++
+### 4. Technical Interviews
+- Candidate-facing technical assessment interface.
+- Written responses to technical questions.
+- DSA and core computer science assessments.
+- Coding challenges with an integrated code editor.
+- Interview status and completion tracking.
 
-Candidate code is executed using isolated Docker containers with resource restrictions.
+### 5. Coding Assessment
+- Integrated code editor for programming challenges.
+- Supported languages:
+  - Python
+  - JavaScript
+  - Java
+  - C++
+- Docker-based code execution implementation.
+- Output validation against predefined test cases.
+- Resource restrictions and isolated execution environment.
 
-### AI-Powered Evaluation
-- Groq-powered written-answer evaluation.
-- Rubric-based scoring.
-- Skill-wise performance analysis.
-- Strengths and weaknesses.
-- Evidence-based feedback.
-- AI-generated hiring recommendations.
+**Note:** The local Docker-based code runner requires a compatible Docker execution environment. Running the web application inside Docker does not automatically make the host Docker daemon available to the code runner.
 
-### Interview Reports
-- Overall candidate score.
-- Individual skill scores.
-- Candidate performance breakdown.
-- AI recommendation: Hire, Hold, or Reject.
-- Detailed evaluation feedback.
+### 6. AI-Powered Evaluation
+- AI-assisted evaluation of written technical answers.
+- Groq API integration.
+- `openai/gpt-oss-20b` model.
+- Rubric-based scoring and feedback.
+- Overall and skill-wise assessment results.
+- Strengths, weaknesses, and evaluation explanations.
+- AI-generated hiring recommendations:
+  - Hire
+  - Hold
+  - Reject
 
-### Human Review
-- Human interviewers review AI-generated scorecards.
-- Final Hire, Hold, or Reject decision.
-- Human decisions remain authoritative.
-- AI recommendations are advisory only.
+AI recommendations are advisory and do not automatically determine hiring outcomes.
 
-### Admin Dashboard
-- Real candidate information from Supabase.
-- Interview status overview.
-- Evaluation and report management.
-- Human review controls.
+### 7. Reports & Human Review
+- Detailed candidate performance reports.
+- Technical skill breakdowns.
+- Evaluation feedback and recommendations.
+- Human interviewer review.
+- Final hiring decision recorded separately from the AI recommendation.
+
+### 8. Applicant Tracking System Integration
+
+The application includes an ATS integration architecture with three providers.
+
+**Demo ATS**
+- Simulated ATS integration without external credentials.
+- Stores synchronized candidate scorecards in Supabase.
+- Displays received candidate records in a dedicated dashboard.
+- Tracks synchronization status.
+- Supports scorecard inspection and duplicate prevention.
+
+**Greenhouse**
+- API integration adapter implemented.
+- Requires authorized Greenhouse credentials and appropriate permissions.
+- Live third-party synchronization has not been verified.
+
+**Lever**
+- API integration adapter implemented.
+- Requires an authorized Lever organization account and API access.
+- Live third-party synchronization has not been verified.
+
+Demo ATS is a simulation and must not be presented as a live connection to Greenhouse or Lever.
 
 ---
 
-## 2. Technology Stack
+## Technology Stack
 
-| Layer | Technology |
+| Component | Technology |
 |---|---|
-| Frontend | Next.js 16, React 19 |
-| Language | TypeScript |
+| Full-stack framework | Next.js |
+| Frontend | React, TypeScript |
 | Styling | Tailwind CSS |
-| Icons | Lucide React |
 | Database | Supabase PostgreSQL |
 | Authentication | Supabase Auth |
-| AI Evaluation | Groq API |
-| AI Model | openai/gpt-oss-20b |
-| Code Editor | Monaco Editor |
-| Code Execution | Docker |
-| Containerization | Docker and Docker Compose |
-| Development Environment | Antigravity IDE / VS Code |
-| Version Control | Git and GitHub |
-
-The project also contains SDK dependencies for additional AI providers, although Groq is used for the current written-answer evaluation flow.
+| AI evaluation | Groq API |
+| AI model | GPT-OSS-20B |
+| Code editor | Monaco Editor |
+| Code execution | Docker |
+| ATS integration | Demo ATS, Greenhouse and Lever adapters |
+| Version control | Git and GitHub |
 
 ---
 
-## 3. System Architecture
+## Application Modules
+
+The administrator interface contains six primary sections:
+
+1. **Dashboard** — Recruitment activity and interview overview.
+2. **Candidates** — Candidate profiles and application records.
+3. **Interviews** — Technical interview management and tracking.
+4. **Question Bank** — Technical assessment questions.
+5. **Reports & Review** — AI scorecards and human hiring decisions.
+6. **Demo ATS** — Simulated ATS records and synchronized scorecards.
+
+---
+
+## System Architecture
 
 ```text
-                  TECH INTERVIEWER AGENT
-                           |
-                           v
-                   Next.js Frontend
-                           |
-              +------------+------------+
-              |                         |
-              v                         v
-       Candidate Interface       Admin Dashboard
-              |                         |
-              v                         v
-       Interview Workflow       Reports and Review
-              |                         |
-              +------------+------------+
-                           |
-                           v
-                    Next.js Backend
-                           |
-              +------------+------------+
-              |            |            |
-              v            v            v
-           Supabase     Groq API    Code Runner
-              |            |            |
-              v            v            v
-         Candidate      AI Rubric    Docker Sandbox
-         Interview      Evaluation   Python / JS /
-         Report Data                 Java / C++
-              |            |
-              +------+-----+
-                     |
-                     v
-              Skill Scorecard
-                     |
-                     v
-             AI Recommendation
-                     |
-                     v
-             Human Final Review
+                   TECH INTERVIEWER AGENT
+                            |
+                            v
+                Next.js + React Frontend
+                            |
+              +-------------+-------------+
+              |             |             |
+              v             v             v
+         Supabase       Interview      Admin Panel
+       Authentication    Workflow
+              |             |             |
+              +-------------+-------------+
+                            |
+                            v
+                   Next.js Server
+                            |
+            +---------------+---------------+
+            |               |               |
+            v               v               v
+       Supabase DB       Groq API       Docker Runner
+            |               |               |
+       Candidates       AI Scoring      Code Execution
+       Interviews       Feedback        Test Validation
+       Reports          Recommendation
+            |
+            v
+       Human Review
+            |
+            v
+       Final Decision
+            |
+            v
+        ATS Service
+            |
+      +-----+------+-----------+
+      |            |           |
+      v            v           v
+   Demo ATS     Greenhouse    Lever
+  (Supabase)     Adapter     Adapter
 ```
 
-The application uses Supabase for persistent data, Groq for written-answer evaluation, and Docker for isolated code execution.
+The diagram represents the application's components and intended data flow. Live external ATS connectivity and deployment-specific Docker execution require additional configuration.
 
 ---
 
-## 4. Interview Workflow
+## AI Evaluation Workflow
 
-The assessment follows a structured process.
-
-### Step 1: Candidate Registration
-
-A candidate profile is created and associated with an interview.
-
-### Step 2: DSA Assessment
-
-The candidate answers Data Structures and Algorithms questions.
-
-Questions may vary by topic and difficulty.
-
-### Step 3: Core Computer Science Assessment
-
-The candidate answers conceptual questions covering topics such as:
-
-- Database Management Systems
-- Operating Systems
-- Computer Networks
-- Object-Oriented Programming
-
-### Step 4: Coding Assessment
-
-The candidate writes code using the Monaco Editor.
-
-The code runner executes the submitted program against predefined test cases.
-
-### Step 5: AI Evaluation
-
-The evaluation service grades written answers using a rubric and combines the available assessment results.
-
-### Step 6: Scorecard Generation
-
-The system generates an interview report containing:
-
-- Overall score
-- Skill-wise performance
-- Strengths
-- Weaknesses
-- Evaluation evidence
-- AI hiring recommendation
-
-### Step 7: Human Review
-
-An authorized human reviewer examines the report and records the final hiring decision.
-
-The AI does not make the final hiring decision.
+1. An administrator prepares technical assessment questions.
+2. A candidate completes written and coding assessments.
+3. The application stores the candidate's responses.
+4. Coding submissions are checked against test cases when the code execution environment is available.
+5. The Groq-powered evaluator grades written responses using structured criteria.
+6. The application generates skill-wise scores and evaluation feedback.
+7. The AI provides a Hire, Hold, or Reject recommendation.
+8. A human interviewer reviews the evidence and records the final decision.
+9. The finalized scorecard can be sent to the simulated Demo ATS.
 
 ---
 
-## 5. Project Requirements
+## Fairness & Responsible AI
 
-The project is based on the Tech Interviewer Agent technical assessment specification.
+Tech Interviewer Agent is designed to support more consistent, evidence-based technical evaluation.
 
-Its primary goals are:
+Key principles include:
 
-1. Conduct structured technical assessments for fresher SDE roles.
-2. Ask DSA and Core CS questions.
-3. Execute coding programs and validate outputs.
-4. Evaluate performance against a rubric.
-5. Produce skill-wise scorecards.
-6. Provide evidence for each rating.
-7. Generate Hire, Hold, or Reject recommendations.
-8. Maintain consistency across candidates.
-9. Avoid bias based on candidate background.
-10. Keep final hiring decisions with a human panel.
+- Using approved technical questions and structured scoring criteria.
+- Evaluating technical responses rather than unrelated personal background.
+- Keeping reference answers separate from the candidate interface.
+- Providing interpretable evaluation feedback.
+- Keeping the final hiring decision with a human reviewer.
+- Distinguishing AI recommendations from human decisions.
 
-Dynamic reasoning follow-ups, fairness verification, and ATS connectivity require additional implementation or validation before being considered complete.
+**Important:** A shared question bank and scoring rubric can reduce inconsistency but do not guarantee an unbiased assessment. Full fairness validation, question-set enforcement, and independent evaluation audits remain important areas for further development.
 
 ---
 
-## 6. Prerequisites
+## Getting Started
 
-Install the following software:
+### Prerequisites
 
-- Node.js 22 or another compatible Node.js version
-- npm
+- Node.js and npm
+- Supabase project
+- Groq API key
+- Docker Desktop (for local coding execution)
 - Git
-- Docker Desktop
-- A Supabase project
-- A Groq API key
 
-Docker Desktop should be running before testing coding submissions that require Docker execution.
-
----
-
-## 7. Local Installation
-
-### Clone the Repository
+### 1. Clone the Repository
 
 ```bash
 git clone YOUR_GITHUB_REPOSITORY_URL
 cd tech-interviewer-agent
 ```
 
-Replace `YOUR_GITHUB_REPOSITORY_URL` with the actual GitHub repository URL.
+Replace `YOUR_GITHUB_REPOSITORY_URL` with the actual repository URL.
 
-### Install Dependencies
+### 2. Install Dependencies
 
 ```bash
 npm install
 ```
 
-### Configure Environment Variables
+### 3. Configure Environment Variables
 
 Create a `.env.local` file in the project root.
 
+Configure the Supabase and Groq environment variables expected by the application.
+
+Optional external ATS configuration may include:
+
 ```env
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-
-SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
-
-GROQ_API_KEY=your_groq_api_key
-
-GEMINI_API_KEY=your_gemini_api_key
+GREENHOUSE_API_KEY=
+GREENHOUSE_ON_BEHALF_OF_USER_ID=
+LEVER_API_KEY=
 ```
 
-The Gemini key is relevant only to features that still use Gemini. The current batch written-answer evaluation uses Groq.
+Use the exact Supabase and Groq variable names required by the existing application code.
 
-Never commit `.env.local` or real API keys to GitHub.
+**Never commit `.env.local`, API keys, or Supabase service-role credentials to GitHub.**
 
-### Start the Development Server
+### 4. Configure Supabase
+
+Set up the project's required database schema and authentication.
+
+Apply the ATS migrations in order:
+
+```text
+supabase/migrations/20261120000000_create_ats_tables.sql
+supabase/migrations/20261120000001_add_demo_ats.sql
+```
+
+Ensure that the Demo ATS migration uses secure admin-only Row Level Security policies matching the application's authorization model.
+
+### 5. Start the Development Server
 
 ```bash
 npm run dev
@@ -268,329 +276,121 @@ npm run dev
 
 Open:
 
+```text
 http://localhost:3000
+```
+
+### 6. Test Demo ATS
+
+1. Log in as an authorized administrator.
+2. Open a completed candidate interview report.
+3. Review the AI evaluation.
+4. Record a final human hiring decision.
+5. Select **Demo ATS** in the ATS Integration section.
+6. Click **Simulate Push to Demo ATS**.
+7. Open the **Demo ATS** dashboard.
+8. Verify the received candidate scorecard.
 
 ---
 
-## 8. Docker Deployment
+## Docker
 
-The application includes Docker configuration for running the Next.js web service in a production-mode container.
+The project includes Docker configuration for containerizing the Next.js application.
 
-### Build and Start
+To build and start the web application:
 
 ```bash
 docker compose --env-file .env.local up -d --build
 ```
 
-### Check Container Status
-
-```bash
-docker compose --env-file .env.local ps
-```
-
-### Access the Application
-
-http://localhost:3001
-
-### View Logs
-
-```bash
-docker compose --env-file .env.local logs --tail=100 web
-```
-
-### Stop Containers
-
-```bash
-docker compose --env-file .env.local down
-```
-
-### Important Deployment Limitation
-
-The current Docker Compose configuration runs the Next.js application.
-
-The existing code runner launches Docker containers through the Docker CLI available to the application process.
-
-When Next.js itself runs inside Docker, it does not automatically have access to the host Docker daemon.
-
-Therefore, coding execution inside the containerized deployment requires a separately configured execution service.
-
-Do not expose the host Docker socket to the web application without carefully evaluating the security implications.
-
-The current Docker deployment is local and does not provide a public hosting URL.
-
----
-
-## 9. Code Execution and Sandbox Security
-
-The code runner supports:
-
-| Language | Runtime |
-|---|---|
-| Python | Python 3.12 |
-| JavaScript | Node.js 22 |
-| C++ | GCC 14 |
-| Java | OpenJDK 17 |
-
-Each test case runs in a Docker container with restrictions such as:
-
-- Network access disabled.
-- Memory limit of 128 MB.
-- CPU limit of 0.5 CPUs.
-- Process count limit.
-- Read-only container filesystem.
-- Restricted temporary filesystem.
-- Linux capabilities dropped.
-- No-new-privileges security option.
-- Execution timeout of approximately 5 seconds.
-- Output-size restrictions.
-- Maximum of 10 test cases per submission.
-
-These controls reduce risk but do not guarantee complete isolation against malicious code.
-
-A production deployment should use a dedicated execution service with additional isolation and operational controls.
-
----
-
-## 10. AI Evaluation System
-
-The application uses Groq to evaluate written technical answers.
-
-### Evaluation Process
-
-1. Load the candidate's submitted answers.
-2. Load the associated questions and rubric information.
-3. Submit the written answers for batch evaluation.
-4. Receive structured evaluation results.
-5. Combine written-answer and coding assessment results.
-6. Store evaluations and generate the final scorecard.
-
-### Current Model
+With the current local Compose configuration, the web application is exposed at:
 
 ```text
-openai/gpt-oss-20b
+http://localhost:3001
 ```
 
-### Generated Outputs
-
-- Rubric scores
-- Skill-wise evaluation
-- Strengths
-- Weaknesses
-- Evidence-based feedback
-- Overall performance score
-- Advisory hiring recommendation
-
-AI evaluation should be reviewed by a human, especially when making employment-related decisions.
+**Code runner limitation:** The existing coding runner invokes Docker from the Next.js server process. A separately containerized Next.js application does not automatically have access to the host Docker runtime. A dedicated, appropriately isolated runner service is recommended for a production deployment.
 
 ---
 
-## 11. Reports and Human Hiring Decisions
+## ATS Database Tables
 
-The reporting system uses real interview data stored in Supabase.
+The ATS implementation uses the following Supabase tables:
 
-A report can include:
-
-- Candidate name and email
-- Interview status
-- Overall score
-- Skill breakdown
-- Evaluation evidence
-- Strengths and weaknesses
-- AI recommendation
-- Human review status
-
-The planned streamlined reporting interface consists of:
-
-### Candidate Results
-
-A simple overview showing candidate names, scores, and a View Report action.
-
-### Detailed Candidate Report
-
-A dedicated view showing the complete scorecard, evidence, AI recommendation, and human review controls.
-
-The final hiring decision is made by an authorized human reviewer, not automatically by the AI model.
-
----
-
-## 12. ATS Integration — Greenhouse and Lever
-
-The project is being extended to support integration with Applicant Tracking Systems.
-
-Target providers:
-
-- Greenhouse Recruiting
-- Lever
-
-### Intended Functionality
-
-- Link an internal candidate to an ATS candidate/application.
-- Select the correct external candidate record.
-- Push finalized interview results to the ATS.
-- Include scores, evidence, and the final human decision.
-- Track synchronization status and errors.
-- Prevent duplicate submissions.
-
-### Security Requirements
-
-- Server-side API communication only.
-- Secure API credentials.
-- Authorized administrator access.
-- Explicit confirmation before synchronization.
-- No automatic rejection based solely on AI recommendations.
-
-### Integration Status
-
-Real Greenhouse and Lever API integration is planned or under development.
-
-It must not be considered operational until the provider APIs have been configured and successful live synchronization has been verified.
-
-Actual integration requires an ATS account, appropriate API access, and the necessary permissions.
-
----
-
-## 13. Database
-
-Supabase PostgreSQL is used to store application data.
-
-Core data entities include:
-
-| Entity | Purpose |
+| Table | Purpose |
 |---|---|
-| candidates | Candidate profiles |
-| interviews | Interview records and status |
-| questions | Question bank and assessment metadata |
-| evaluations | Per-question or per-skill evaluation results |
-| reports | Overall scores and recommendations |
+| `ats_candidate_mappings` | Links internal candidates to ATS identifiers |
+| `ats_sync_logs` | Records ATS synchronization attempts and results |
+| `demo_ats_records` | Stores scorecards received by the simulated ATS |
 
-The application also uses Supabase Auth for authentication.
-
-ATS integration may introduce additional tables for external candidate mappings and synchronization logs.
-
-Database migrations and Row Level Security policies should be applied according to the application's actual schema.
+The Demo ATS provider does not send candidate data to an external ATS service.
 
 ---
 
-## 14. Security and Fairness
+## Testing
 
-The application is designed around the following principles:
+The ATS integration implementation report recorded:
 
-### Human Oversight
+- **12/12 automated ATS tests passed**
+- **0 TypeScript errors**
 
-AI recommendations are advisory. Final hiring decisions remain with human reviewers.
+These are reported local test results, not proof of successful live Greenhouse or Lever API synchronization.
 
-### Consistent Assessment
+To run the ATS tests:
 
-Candidates should be evaluated using consistent question selection rules and scoring rubrics.
+```bash
+npx tsx --require ./tests/register-server-only.cjs tests/ats-integration.test.ts
+```
 
-### Fairness
+To check TypeScript:
 
-Evaluation should focus on demonstrated technical ability rather than college, background, or unrelated personal characteristics.
-
-### Answer Protection
-
-Reference answers and private test cases should not be exposed to candidate-facing interfaces.
-
-### Secret Management
-
-API keys and privileged Supabase credentials must remain server-side.
-
-### Sandboxed Execution
-
-Candidate programs should run in isolated execution environments with resource restrictions.
-
-These safeguards require testing and review before production use.
+```bash
+npx tsc --noEmit
+```
 
 ---
 
-## 15. Testing Checklist
+## Current Limitations
 
-Before a final demonstration or production deployment, verify:
-
-- [ ] Candidate creation works.
-- [ ] Candidate authentication and access rules work.
-- [ ] Interview questions load correctly.
-- [ ] DSA questions follow the intended difficulty progression.
-- [ ] Core CS questions are displayed correctly.
-- [ ] Candidate answers are saved.
-- [ ] Code execution passes and fails test cases correctly.
-- [ ] Code execution works in the chosen deployment environment.
-- [ ] AI evaluation completes successfully.
-- [ ] Skill-wise scores are stored.
-- [ ] Detailed reports display correct data.
-- [ ] Human review updates persist.
-- [ ] Candidate-facing APIs do not expose answers or hidden test cases.
-- [ ] Assessment consistency and fairness are verified.
-- [ ] Docker deployment starts successfully.
-- [ ] ATS integration is tested with real provider credentials, if enabled.
-- [ ] No API keys or sensitive environment files are committed.
+- Live Greenhouse and Lever integrations require authorized credentials and provider permissions.
+- Demo ATS synchronization is simulated.
+- Docker-based code execution requires compatible runtime infrastructure.
+- Fairness and rubric consistency require continued validation.
+- Dynamic reasoning follow-up questions require further verification.
+- Production readiness requires additional security testing and monitoring.
 
 ---
 
-## 16. Current Project Status
+## Future Enhancements
 
-### Implemented and Previously Tested
-
-- Supabase-backed candidate and interview data.
-- Admin dashboard with real candidate information.
-- Written-answer evaluation using Groq.
-- AI-generated scorecards and recommendations.
-- Human review functionality.
-- Local Docker build and running Next.js container.
-
-### In Progress or Requiring Verification
-
-- Final UI improvements.
-- Simplified Candidate Results page.
-- Dedicated detailed report experience.
-- Dockerized coding runner integration.
-- Dynamic reasoning follow-up questions.
-- Assessment fairness and answer-protection verification.
-- Real Greenhouse and Lever ATS integration.
-- Full end-to-end testing.
-- Public deployment, if required.
+- Adaptive follow-up questions based on candidate reasoning.
+- Expanded question bank and standardized assessment templates.
+- Improved fairness auditing and evaluation calibration.
+- Dedicated sandboxed coding execution service.
+- Live ATS synchronization with authorized Greenhouse and Lever accounts.
+- Advanced recruitment analytics.
+- Production deployment and operational monitoring.
 
 ---
 
-## 17. Future Enhancements
+## Hackathon Demonstration
 
-Possible future improvements include:
+The demonstration covers:
 
-- Adaptive follow-up questioning.
-- Additional programming languages.
-- Interview analytics.
-- PDF or Excel report export.
-- Real ATS synchronization.
-- Interview scheduling.
-- Automated interview notifications.
-- Enhanced code execution isolation.
-- Public cloud deployment.
-- Additional fairness and audit tooling.
+**Login → Dashboard → Question Bank → Candidate Assessment → AI Evaluation → Human Review → Demo ATS → Supabase Database**
+
+The project demonstrates how AI can assist technical interviewing while preserving human accountability.
 
 ---
 
-## 18. Project Purpose
+## Project Status
 
-This project demonstrates how AI can assist technical interviewers by automating repetitive assessment tasks while preserving human accountability.
+**Hackathon Prototype**
 
-It combines structured questions, executable coding assessments, AI evaluation, persistent reports, and human review into a single technical assessment platform.
-
-The intended outcome is a more consistent and transparent interview process for entry-level software engineering candidates.
+Core assessment, evaluation, reporting, and simulated ATS features have been implemented. Additional verification and production hardening are required before use in real hiring decisions.
 
 ---
 
-## 19. License
+## License
 
-No license has been specified for this project.
-
-Add a `LICENSE` file if you intend to make the repository available for reuse.
-
----
-
-## 20. Disclaimer
-
-Tech Interviewer Agent is a hackathon/prototype project.
-
-AI-generated scores and recommendations may contain errors and should not be used as the sole basis for employment decisions.
-
-Before production use, the system requires additional security, privacy, fairness, reliability, and operational testing.
+No license has been specified. See the repository for any future licensing information.
